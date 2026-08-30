@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary SEO -->
+<title>Unix Timestamp Converter - Epoch to Date & Date to Timestamp | WeUtil</title>
+<meta name="description" content="Free online Unix timestamp converter. Convert epoch seconds, milliseconds, microseconds and nanoseconds to readable date/time; convert date & time to timestamp. Auto-detect precision, local time & UTC, instant two-way conversion. No install, works in the browser.">
+<meta name="keywords" content="timestamp converter,unix timestamp,epoch converter,epoch to date,date to timestamp,ms to date,milliseconds to date,timestamp to date,unix time converter,online timestamp tool">
+<meta name="robots" content="index, follow">
+<meta name="author" content="WeUtil">
+<meta name="theme-color" content="#0b1020">
+<link rel="canonical" href="https://weutil.top/timestamp">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Epoch Lab - Unix Timestamp Converter & Epoch to Date Tool">
+<meta property="og:description" content="Two-way Unix timestamp converter with auto precision detection (s/ms/µs/ns), local time & UTC, multiple output formats. Works in the browser.">
+<meta property="og:url" content="https://weutil.top/timestamp">
+<meta property="og:site_name" content="WeUtil">
+<meta property="og:locale" content="en_US">
+
+<!-- JSON-LD Structured Data: SoftwareApplication -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Epoch Lab",
+  "description": "Free online Unix timestamp converter. Convert epoch seconds, milliseconds, microseconds and nanoseconds to readable date/time; convert date & time to timestamp. Auto-detect precision, local time & UTC.",
+  "url": "https://weutil.top/timestamp",
+  "publisher": {
+    "@type": "Organization",
+    "name": "WeUtil"
+  },
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "en",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Completely free"
+  },
+  "featureList": [
+    "Timestamp to date conversion with auto precision (seconds / milliseconds / microseconds / nanoseconds)",
+    "Date & time to timestamp (seconds / milliseconds / microseconds / nanoseconds)",
+    "Local time and UTC display",
+    "Multiple output formats (ISO 8601, RFC 2822, locale)",
+    "Relative time display",
+    "Live clock and Now shortcut",
+    "Light/dark theme toggle"
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  /* ===================== Design tokens (match JSON Lab) ===================== */
+  :root {
+    --font-ui: 'Space Grotesk', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+    --bg: #0b1020;
+    --bg-2: #101731;
+    --bg-3: #17203f;
+    --bg-4: #202b50;
+    --border: #25315a;
+    --border-2: #34406e;
+    --text: #e9edf7;
+    --dim: #9aa6c4;
+    --faint: #5f6c90;
+
+    --accent: #e8a25c;
+    --accent-hi: #f6c28a;
+    --accent-ink: #201403;
+
+    --tok-key: #86b9f0;
+    --tok-str: #9fd3a4;
+    --tok-num: #f0b46e;
+
+    --ok: #7bd39a;
+    --err: #f0837c;
+    --guide: rgba(134, 185, 240, 0.16);
+
+    --shadow: 0 14px 40px rgba(0,0,0,.42);
+    --radius: 12px;
+  }
+  html[data-theme="light"] {
+    --bg: #f2f5fb;
+    --bg-2: #ffffff;
+    --bg-3: #edf1f9;
+    --bg-4: #e3e9f5;
+    --border: #d9e0ef;
+    --border-2: #c2cce2;
+    --text: #1c2334;
+    --dim: #55617e;
+    --faint: #8a94ad;
+
+    --accent: #c67d34;
+    --accent-hi: #a9641f;
+    --accent-ink: #ffffff;
+
+    --tok-key: #1f6fd0;
+    --tok-str: #1d8a3c;
+    --tok-num: #b25e13;
+
+    --ok: #1f9d57;
+    --err: #d6453c;
+    --guide: rgba(31, 111, 208, 0.18);
+
+    --shadow: 0 14px 40px rgba(30, 45, 90, .16);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-ui);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(232,162,92,.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(86,140,235,.10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+  .hidden { display: none !important; }
+
+  /* ===================== Top bar ===================== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(6px);
+    flex: 0 0 auto;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .2px; }
+  .brand .logo {
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+    color: var(--accent-ink);
+    box-shadow: 0 4px 14px rgba(232,162,92,.35);
+  }
+  .brand .logo svg { display: block; }
+  .brand .name b { color: var(--accent); font-weight: 700; }
+  .brand .tag { font-size: 12px; color: var(--dim); font-weight: 400; margin-left: 2px; }
+  .toolnav { display: flex; gap: 4px; margin-left: 6px; }
+  .toolnav a {
+    padding: 5px 11px; border-radius: 8px;
+    font-size: 13px; color: var(--dim); text-decoration: none;
+    border: 1px solid transparent;
+    transition: background .15s, color .15s;
+  }
+  .toolnav a:hover { background: var(--bg-3); color: var(--text); }
+  .toolnav a.active { background: var(--bg-3); color: var(--accent); font-weight: 600; border-color: var(--border); }
+  .topbar .spacer { flex: 1; }
+  .shortcut-hint { font-family: var(--font-mono); font-size: 12px; color: var(--faint); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+
+  /* ---- bottom feature / SEO section ---- */
+  .features {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
+    width: 100%;
+  }
+  .features h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .features .lead {
+    color: var(--dim);
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 0 20px;
+  }
+  .feature-block {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+  }
+  .feature-block h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--accent);
+  }
+  .feature-block p {
+    font-size: 13px;
+    color: var(--dim);
+    line-height: 1.75;
+    margin: 0 0 8px;
+  }
+  .feature-block ul { margin: 6px 0 0; padding-left: 18px; }
+  .feature-block li {
+    font-size: 13px;
+    color: var(--dim);
+    line-height: 1.8;
+  }
+  .feature-block li b { color: var(--text); font-weight: 600; }
+  .feature-block a { color: var(--accent); text-decoration: none; }
+  .feature-block a:hover { text-decoration: underline; }
+
+  /* ===================== Toolbar ===================== */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  .toolbar .group { display: flex; align-items: center; gap: 8px; }
+  .toolbar .divider { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: background .15s, border-color .15s, transform .05s;
+    user-select: none;
+  }
+  .btn:hover { background: var(--bg-3); border-color: var(--border-2); }
+  .btn:active { transform: translateY(1px); }
+  .btn svg { flex: 0 0 auto; }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+    color: var(--accent-ink);
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(232,162,92,.28);
+  }
+  .btn.primary:hover { filter: brightness(1.05); background: linear-gradient(135deg, var(--accent), var(--accent-hi)); }
+  .btn.ghost-icon { padding: 8px; }
+  .btn .txt { white-space: nowrap; }
+  .clock {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12.5px; color: var(--dim);
+  }
+  .clock .t { color: var(--text); }
+  .clock .t b { color: var(--accent); font-weight: 600; }
+
+  /* ===================== Workspace ===================== */
+  .workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(340px, 1fr) minmax(360px, 1.15fr);
+    gap: 14px;
+    padding: 14px 18px 12px;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-3);
+    flex: 0 0 auto;
+  }
+  .panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dim);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .panel-title .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .panel-head .spacer { flex: 1; }
+  .hint { font-size: 12px; color: var(--faint); }
+
+  .panel-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px; gap: 10px; overflow-y: auto; }
+
+  /* ---- input field ---- */
+  .field { display: flex; gap: 8px; align-items: stretch; flex: 0 0 auto; }
+  .field input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--guide); }
+  .field input::placeholder { color: var(--faint); }
+  .field select {
+    flex: 0 0 auto;
+    padding: 8px 8px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg-3);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+    cursor: pointer;
+  }
+  .field select:hover { border-color: var(--border-2); }
+  .field select option { background: var(--bg-2); }
+
+  /* ---- output timezone selector ---- */
+  .zone-select {
+    padding: 5px 8px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg-3);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    max-width: 190px;
+    outline: none;
+    cursor: pointer;
+  }
+  .zone-select:hover { border-color: var(--border-2); }
+  .zone-select option { background: var(--bg-2); }
+  .zone-select optgroup { font-family: var(--font-ui); color: var(--dim); }
+
+  /* ---- segmented toggle (Local / UTC) ---- */
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+  .seg button {
+    border: none;
+    background: var(--bg-2);
+    color: var(--dim);
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: background .15s, color .15s;
+  }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button.on { background: var(--bg-4); color: var(--accent); }
+
+  /* ---- results ---- */
+  .results { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .results.empty { align-items: center; justify-content: center; border-style: dashed; }
+  .empty-msg { color: var(--faint); font-size: 13px; padding: 22px; text-align: center; line-height: 1.7; }
+  .empty-msg code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
+  .krow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .krow:last-child { border-bottom: none; }
+  .krow .k-label {
+    flex: 0 0 96px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .krow.zone-row .k-label {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 175px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: none;
+    letter-spacing: .2px;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .krow .k-val {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .krow .k-val.timestamp { font-size: 14.5px; color: var(--tok-num); font-weight: 600; }
+  .krow .k-val.accent { color: var(--tok-key); }
+  .krow .k-val.rel { color: var(--dim); }
+  .copy-btn {
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--bg-3);
+    color: var(--faint);
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--border-2); }
+  .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
+
+  /* ===================== Status bar ===================== */
+  .statusbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-2);
+    font-size: 12px;
+    color: var(--faint);
+    flex: 0 0 auto;
+  }
+  .status { display: flex; align-items: center; gap: 8px; }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-3);
+    color: var(--dim);
+  }
+  .pill.tz { color: var(--tok-str); }
+  .pill.unit { color: var(--tok-num); }
+  .statusbar .stats { margin-left: auto; display: flex; gap: 14px; }
+  .statusbar .stats span { color: var(--faint); }
+  .statusbar .stats b { color: var(--text); font-weight: 600; font-family: var(--font-mono); }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; height: auto; }
+    .workspace { grid-template-columns: 1fr; height: auto; }
+    .panel { min-height: 320px; }
+    .brand .tag { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===================== Top bar ===================== -->
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="logo">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="3" y="13.4" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="13.4" width="7.6" height="7.6" rx="1.6"/></svg>
+      </span>
+      <span class="name">We<b>Util</b></span>
+      <span class="tag">Developer Toolbox</span>
+    </a>
+    <nav class="toolnav" aria-label="Tools">
+      <a href="index.html">Home</a>
+      <a href="json.html">JSON Lab</a>
+      <a class="active" href="timestamp.html" aria-current="page">Epoch Lab</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="shortcut-hint">⌘ / Ctrl + Enter → Now</span>
+  </header>
+
+  <!-- ===================== Toolbar ===================== -->
+  <section class="toolbar" aria-label="Toolbar">
+    <div class="group">
+      <button class="btn primary" id="btnNow" title="Fill with current epoch (seconds)">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>
+        <span class="txt">Now</span>
+      </button>
+    </div>
+    <div class="divider"></div>
+    <div class="group clock" id="clock" title="Current epoch">
+      <span>Now</span>
+      <span class="t"><b id="nowSec">—</b> s</span>
+      <span>·</span>
+      <span class="t"><b id="nowMs">—</b> ms</span>
+    </div>
+    <div class="spacer" style="flex:1"></div>
+    <div class="group">
+      <button class="btn ghost-icon" id="btnTheme" title="Toggle light / dark theme">
+        <svg id="iconSun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg id="iconMoon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== Workspace ===================== -->
+  <main class="workspace">
+
+    <!-- Left: timestamp -> date -->
+    <section class="panel" aria-label="Unix timestamp to date">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot"></span>Unix Timestamp</div>
+        <div class="spacer"></div>
+        <select id="outZone" class="zone-select" title="Output time zone"></select>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <input id="tsInput" type="text" placeholder="e.g. 1756000000" spellcheck="false" autocomplete="off" inputmode="decimal">
+          <select id="tsPrecision" title="Timestamp precision">
+            <option value="auto">Auto</option>
+            <option value="s">Seconds</option>
+            <option value="ms">Milliseconds</option>
+            <option value="us">Microseconds</option>
+            <option value="ns">Nanoseconds</option>
+          </select>
+        </div>
+        <div class="results empty" id="tsResults">
+          <div class="empty-msg">Enter an epoch timestamp to convert,<br>e.g. <code>1756000000</code> (seconds) or <code>1756000000123</code> (ms).<br>Precision is detected automatically.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: date -> timestamp -->
+    <section class="panel" aria-label="Date to unix timestamp">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot"></span>Date &amp; Time</div>
+        <div class="spacer"></div>
+        <div class="seg" id="dtTzSeg" title="Interpret input as">
+          <button data-val="local">Local</button>
+          <button data-val="utc" class="on">UTC</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <input id="dtInput" type="text" placeholder="e.g. 2026-08-30 10:30:00" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="results empty" id="dtResults">
+          <div class="empty-msg">Enter a date &amp; time to convert,<br>e.g. <code>2026-08-30 10:30:00</code>, <code>2026-08-30</code>,<br>or ISO with offset <code>2026-08-30T02:30:00Z</code>.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================== Status bar ===================== -->
+  <footer class="statusbar">
+    <div class="status">
+      <span class="pill tz" id="tzPill">—</span>
+      <span class="pill unit" id="unitPill">precision: —</span>
+    </div>
+    <div class="stats">
+      <span>Now <b id="statSec">—</b></span>
+      <span>· <b id="statMs">—</b></span>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function pad3(n) { return String(n).padStart(3, '0'); }
+
+  var ICON_COPY = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+
+  var UNIT_LABEL = { s: 'seconds', ms: 'milliseconds', us: 'microseconds', ns: 'nanoseconds' };
+
+  /* ===================== helpers ===================== */
+  function copyText(text, btn) {
+    if (!text) return;
+    function done() {
+      btn.innerHTML = ICON_CHECK;
+      btn.classList.add('copied');
+      setTimeout(function () { btn.innerHTML = ICON_COPY; btn.classList.remove('copied'); }, 1100);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  function detectPrecision(raw) {
+    var m = String(raw).trim().replace(/^-/, '');
+    if (!/^\d+(\.\d+)?$/.test(m)) return null;
+    var len = m.split('.')[0].length;
+    if (len <= 10) return 's';
+    if (len <= 13) return 'ms';
+    if (len <= 16) return 'us';
+    return 'ns';
+  }
+
+  function parseTimestamp(raw, precision) {
+    var s = String(raw).trim();
+    if (!s || !/^-?\d+(\.\d+)?$/.test(s)) return null;
+    var unit = precision || detectPrecision(s);
+    if (!unit) return null;
+    var neg = s.charAt(0) === '-';
+    var digits = neg ? s.slice(1) : s;
+    var ms;
+    if (unit === 's' || unit === 'ms') {
+      var val = parseFloat(s);
+      ms = unit === 's' ? val * 1000 : val;
+    } else {
+      if (digits.indexOf('.') === -1) {
+        var big = BigInt(digits);
+        if (unit === 'us') {
+          ms = Number(big / 1000n) + Number(big % 1000n) / 1000;
+        } else {
+          ms = Number(big / 1000000n) + Number(big % 1000000n) / 1e6;
+        }
+        if (neg) ms = -ms;
+      } else {
+        var v = parseFloat(s);
+        ms = unit === 'us' ? v / 1000 : v / 1e6;
+      }
+    }
+    if (!isFinite(ms)) return null;
+    return { ms: ms, unit: unit };
+  }
+
+  function fmtLocal(ms) {
+    var d = new Date(ms);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + pad3(d.getMilliseconds());
+  }
+  function fmtUTC(ms) {
+    var d = new Date(ms);
+    return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate()) +
+      ' ' + pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds()) + '.' + pad3(d.getUTCMilliseconds()) + ' UTC';
+  }
+  function fmtISO(ms) { return new Date(ms).toISOString(); }
+  function fmtRFC(ms) { return new Date(ms).toUTCString(); }
+  function fmtLocale(ms) {
+    return new Date(ms).toLocaleString(undefined, {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+  }
+  function fmtZone(ms, zone) {
+    try {
+      var d = new Date(ms);
+      var fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: zone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false, hourCycle: 'h23'
+      });
+      var parts = fmt.formatToParts(d);
+      function get(t) { var p = parts.find(function (x) { return x.type === t; }); return p ? p.value : ''; }
+      return get('year') + '-' + get('month') + '-' + get('day') + ' ' +
+        get('hour') + ':' + get('minute') + ':' + get('second') + '.' + pad3(d.getMilliseconds());
+    } catch (e) {
+      return 'Invalid time zone';
+    }
+  }
+  function buildZoneOptions() {
+    var zones;
+    try {
+      zones = Intl.supportedValuesOf('timeZone');
+    } catch (e) {
+      zones = ['UTC', 'Asia/Shanghai', 'Asia/Tokyo', 'Asia/Singapore', 'Asia/Hong_Kong', 'Asia/Kolkata',
+        'Australia/Sydney', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+        'America/New_York', 'America/Los_Angeles', 'America/Chicago', 'America/Sao_Paulo', 'Pacific/Auckland'];
+    }
+    var html = '<option value="UTC">UTC</option>';
+    var groups = {};
+    zones.forEach(function (z) {
+      if (z === 'UTC') return;
+      var region = z.indexOf('/') > -1 ? z.split('/')[0] : 'Other';
+      if (!groups[region]) groups[region] = [];
+      groups[region].push(z);
+    });
+    Object.keys(groups).sort().forEach(function (region) {
+      html += '<optgroup label="' + region + '">';
+      groups[region].forEach(function (z) {
+        html += '<option value="' + z + '">' + z + '</option>';
+      });
+      html += '</optgroup>';
+    });
+    return html;
+  }
+  function relative(ms) {
+    var diff = ms - Date.now();
+    var abs = Math.abs(diff);
+    if (abs < 1000) return 'just now';
+    var past = diff < 0;
+    var label = past ? 'ago' : 'from now';
+    if (abs < 60000) return Math.floor(abs / 1000) + ' sec ' + label;
+    if (abs < 3600000) return Math.floor(abs / 60000) + ' min ' + label;
+    if (abs < 86400000) return Math.floor(abs / 3600000) + ' hr ' + label;
+    if (abs < 2592000000) return Math.floor(abs / 86400000) + ' day ' + label;
+    if (abs < 31536000000) return Math.floor(abs / 2592000000) + ' mon ' + label;
+    return Math.floor(abs / 31536000000) + ' yr ' + label;
+  }
+
+  /* ===================== date parsing ===================== */
+  function parseDateInput(str, utc) {
+    var s = String(str).trim();
+    if (!s) return null;
+    var m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2})(?:\.(\d{1,3}))?)?)?(Z|[+-]\d{2}:?\d{2})?$/i);
+    if (m) {
+      var Y = +m[1], Mo = +m[2] - 1, D = +m[3],
+          h = m[4] ? +m[4] : 0, mi = m[5] ? +m[5] : 0,
+          s2 = m[6] ? +m[6] : 0, ms = m[7] ? +m[7].padEnd(3, '0') : 0;
+      var off = m[8];
+      if (off) {
+        if (off === 'Z') return Date.UTC(Y, Mo, D, h, mi, s2, ms);
+        var sign = off.charAt(0) === '-' ? -1 : 1;
+        var zm = off.slice(1).replace(':', '');
+        var offMin = sign * (+zm.slice(0, 2) * 60 + +zm.slice(2));
+        return Date.UTC(Y, Mo, D, h, mi, s2, ms) - offMin * 60000;
+      }
+      if (utc) return Date.UTC(Y, Mo, D, h, mi, s2, ms);
+      return new Date(Y, Mo, D, h, mi, s2, ms).getTime();
+    }
+    var t = Date.parse(s);
+    return isNaN(t) ? null : t;
+  }
+
+  /* ===================== rendering ===================== */
+  function rowHtml(label, value, cls) {
+    var btn = '<button class="copy-btn" data-copy="" title="Copy">' + ICON_COPY + '</button>';
+    return '<div class="krow"><div class="k-label">' + label + '</div>' +
+      '<div class="k-val ' + (cls || '') + '">' + escapeHtml(value) + '</div>' + btn + '</div>';
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  var syncing = false;
+
+  function updateFromTs() {
+    var raw = $('tsInput').value;
+    var sel = $('tsPrecision').value;
+    var precision = sel === 'auto' ? null : sel;
+    var res = parseTimestamp(raw, precision);
+    var out = $('tsResults');
+    if (!res) {
+      out.classList.add('empty');
+      out.innerHTML = '<div class="empty-msg">Enter an epoch timestamp to convert,<br>e.g. <code>1756000000</code> (seconds) or <code>1756000000123</code> (ms).<br>Precision is detected automatically.</div>';
+      $('unitPill').textContent = 'precision: —';
+      return;
+    }
+    out.classList.remove('empty');
+    var ms = res.ms;
+    $('unitPill').textContent = 'precision: ' + UNIT_LABEL[res.unit];
+
+    if (!syncing) {
+      syncing = true;
+      var dtMode = $('dtTzSeg').querySelector('.on').dataset.val;
+      $('dtInput').value = (dtMode === 'utc') ? fmtUTC(ms).replace(' UTC', '') : fmtLocal(ms);
+      renderDate();
+      syncing = false;
+    }
+
+    var zone = $('outZone').value || 'UTC';
+    var zoneRow = '<div class="krow zone-row">' +
+      '<div class="k-label zone-label" title="' + escapeHtml(zone) + '">' + escapeHtml(zone) + '</div>' +
+      '<div class="k-val">' + escapeHtml(fmtZone(ms, zone)) + '</div>' +
+      '<button class="copy-btn" data-copy="" title="Copy">' + ICON_COPY + '</button>' +
+      '</div>';
+    var utcRow = (zone === 'UTC') ? '' : rowHtml('UTC', fmtUTC(ms));
+
+    out.innerHTML =
+      zoneRow +
+      utcRow +
+      rowHtml('ISO 8601', fmtISO(ms)) +
+      rowHtml('RFC 2822', fmtRFC(ms)) +
+      rowHtml('Local', fmtLocal(ms)) +
+      rowHtml('Relative', relative(ms), 'rel');
+  }
+
+  function renderDate() {
+    var raw = $('dtInput').value;
+    var utc = $('dtTzSeg').querySelector('.on').dataset.val === 'utc';
+    var ms = parseDateInput(raw, utc);
+    var out = $('dtResults');
+    if (ms == null) {
+      out.classList.add('empty');
+      out.innerHTML = '<div class="empty-msg">Enter a date &amp; time to convert,<br>e.g. <code>2026-08-30 10:30:00</code>, <code>2026-08-30</code>,<br>or ISO with offset <code>2026-08-30T02:30:00Z</code>.</div>';
+      return;
+    }
+    out.classList.remove('empty');
+    if (!syncing) {
+      syncing = true;
+      $('tsInput').value = (ms % 1000 === 0) ? String(Math.floor(ms / 1000)) : String(ms);
+      updateFromTs();
+      syncing = false;
+    }
+    var msBig = BigInt(Math.round(ms));
+    out.innerHTML =
+      rowHtml('Seconds', String(Math.floor(ms / 1000)), 'timestamp') +
+      rowHtml('Milliseconds', String(ms), 'timestamp') +
+      rowHtml('Microseconds', String(msBig * 1000n), 'timestamp') +
+      rowHtml('Nanoseconds', String(msBig * 1000000n), 'timestamp');
+  }
+
+  /* ===================== events ===================== */
+  $('tsInput').addEventListener('input', updateFromTs);
+  $('tsPrecision').addEventListener('change', updateFromTs);
+  $('outZone').innerHTML = buildZoneOptions();
+  $('outZone').value = 'UTC';
+  $('outZone').addEventListener('change', updateFromTs);
+  $('dtInput').addEventListener('input', renderDate);
+
+  $('dtTzSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    Array.prototype.forEach.call(this.children, function (c) { c.classList.remove('on'); });
+    b.classList.add('on');
+    renderDate();
+  });
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    var val = btn.previousElementSibling.textContent;
+    copyText(val, btn);
+  });
+
+  $('btnNow').addEventListener('click', function () {
+    var ms = Date.now();
+    $('tsInput').value = String(Math.floor(ms / 1000));
+    updateFromTs();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      $('btnNow').click();
+    }
+  });
+
+  /* ===================== theme ===================== */
+  $('btnTheme').addEventListener('click', function () {
+    var html = document.documentElement;
+    var dark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', dark ? 'light' : 'dark');
+    $('iconSun').style.display = dark ? 'none' : '';
+    $('iconMoon').style.display = dark ? '' : 'none';
+  });
+
+  /* ===================== live clock ===================== */
+  function tzInfo() {
+    var tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'UTC';
+    var off = -new Date().getTimezoneOffset();
+    var sign = off >= 0 ? '+' : '-';
+    var a = Math.abs(off);
+    return { name: tz, off: 'UTC' + sign + pad2(Math.floor(a / 60)) + ':' + pad2(a % 60) };
+  }
+  function tick() {
+    var now = Date.now();
+    var sec = String(Math.floor(now / 1000));
+    $('nowSec').textContent = sec;
+    $('nowMs').textContent = String(now);
+    $('statSec').textContent = sec;
+    $('statMs').textContent = String(now);
+  }
+
+  var tz = tzInfo();
+  $('tzPill').textContent = tz.name + ' (' + tz.off + ')';
+  tick();
+  setInterval(tick, 1000);
+
+  /* ===================== init ===================== */
+  updateFromTs();
+})();
+</script>
+
+  <!-- ===================== Feature details (SEO) ===================== -->
+  <section class="features">
+    <h2>About Epoch Lab</h2>
+    <p class="lead">Epoch Lab is a free online unix timestamp converter. Convert epoch time to human-readable dates and back, with support for any time zone. All processing happens locally in your browser.</p>
+
+    <div class="feature-block">
+      <h3>What you can do</h3>
+      <ul>
+        <li><b>Timestamp to date</b> — paste an epoch number and instantly get readable time. Auto-detects seconds, milliseconds, microseconds and nanoseconds from the digit length.</li>
+        <li><b>Date to timestamp</b> — type <code>YYYY-MM-DD HH:mm:ss</code>, ISO 8601 with offset, or a plain date; output in seconds, milliseconds, microseconds and nanoseconds.</li>
+        <li><b>Any time zone</b> — switch output between UTC, your local zone, or any IANA zone such as Asia/Tokyo, America/New_York, or Europe/London. Daylight saving time is handled automatically.</li>
+        <li><b>Multiple formats</b> — ISO 8601, RFC 2822, locale string, and relative time ("3 hours ago").</li>
+        <li><b>Live clock</b> — copy the current epoch in seconds or milliseconds with one click; press ⌘/Ctrl+Enter to load "now".</li>
+      </ul>
+    </div>
+
+    <div class="feature-block">
+      <h3>When to use it</h3>
+      <p>Decode a timestamp from a log file or database, generate an epoch for an API request, check what time a server event happened in another time zone, or compare the same instant across UTC and your local time. Everything works offline once the page loads.</p>
+      <p>Need to format JSON? Try <a href="json.html">JSON Lab →</a></p>
+    </div>
+  </section>
+
+</body>
+</html>
