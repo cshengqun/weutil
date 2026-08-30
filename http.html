@@ -56,12 +56,9 @@
     --shadow: 0 14px 40px rgba(30,45,90,.16);
   }
   * { box-sizing: border-box; }
-  html, body { min-height: 100%; }
+  html, body { height: 100%; }
   body {
     margin: 0; font-family: var(--font-ui); background: var(--bg); color: var(--text);
-    min-height: 100vh; overflow-y: auto;
-  }
-  .app-shell {
     display: flex; flex-direction: column; height: 100vh; overflow: hidden;
   }
   button { font-family: inherit; cursor: pointer; }
@@ -288,23 +285,6 @@
   .statusbar .pill { padding: 2px 8px; border-radius: 4px; background: var(--bg-3); }
   .statusbar .spacer { flex: 1; }
 
-  /* SEO content (below the fold) */
-  .seo-content {
-    max-width: 820px; margin: 0 auto; padding: 40px 24px 60px;
-    color: var(--dim); line-height: 1.75; font-size: 14.5px;
-  }
-  .seo-content h2 { color: var(--text); font-size: 22px; font-weight: 700; margin: 0 0 12px; }
-  .seo-content h3 { color: var(--text); font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
-  .seo-content p { margin: 0 0 12px; }
-  .seo-content ul { margin: 0 0 12px; padding-left: 20px; }
-  .seo-content li { margin-bottom: 6px; }
-  .seo-content a { color: var(--accent); text-decoration: none; }
-  .seo-content a:hover { text-decoration: underline; }
-  .seo-content code {
-    font-family: var(--font-mono); font-size: 12.5px;
-    background: var(--bg-3); padding: 1px 6px; border-radius: 4px; color: var(--accent-hi);
-  }
-
   .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--faint); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -316,7 +296,6 @@
 </head>
 <body>
 
-<div class="app-shell">
 <header class="topbar">
   <a class="brand" href="/">
     <span class="logo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="3" y="13.4" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="13.4" width="7.6" height="7.6" rx="1.6"/></svg></span>
@@ -445,37 +424,6 @@
   <span class="spacer"></span>
   <span>Requests go through WeUtil proxy to bypass CORS</span>
 </div>
-</div><!-- /app-shell -->
-
-<!-- ===================== SEO content ===================== -->
-<section class="seo-content">
-  <h2>Online HTTP Client &amp; API Tester</h2>
-  <p>WeUtil HTTP Client is a free, browser-based API testing tool. Send GET, POST, PUT, DELETE, PATCH, HEAD and OPTIONS requests with custom headers, request bodies, and authentication — no installation, no sign-up. It is a lightweight Postman alternative that runs entirely in your browser.</p>
-
-  <h3>Import cURL commands</h3>
-  <p>Paste any cURL command copied from terminal, browser DevTools, or documentation, and the client automatically fills in the HTTP method, URL, headers, cookies, and request body. It supports <code>-X</code>, <code>-H</code>, <code>-d</code>, <code>--data-raw</code>, <code>-b</code>, <code>-u</code>, <code>-F</code>, and <code>--url</code> flags, so you can replay real-world requests in one click.</p>
-
-  <h3>Build requests visually</h3>
-  <ul>
-    <li><b>Method &amp; URL</b> — pick from 7 HTTP methods and enter any endpoint; <code>https://</code> is added automatically.</li>
-    <li><b>Headers</b> — add, edit, and remove header key-value pairs such as <code>Content-Type</code>, <code>Authorization</code>, and custom API keys.</li>
-    <li><b>Body</b> — send JSON, x-www-form-urlencoded, or raw text payloads with a built-in editor.</li>
-    <li><b>Authentication</b> — Bearer token and Basic auth are supported; the Authorization header is generated automatically.</li>
-  </ul>
-
-  <h3>Inspect responses</h3>
-  <p>View the HTTP status code, response time, and body size at a glance. JSON responses are rendered in a <b>collapsible tree view</b> — expand or collapse any object or array to drill into nested fields — or switch to a syntax-highlighted <b>formatted view</b>. Response headers are listed in a separate tab.</p>
-
-  <h3>Why use WeUtil HTTP Client?</h3>
-  <ul>
-    <li><b>Free forever</b> — no account, no rate limits, no paywall.</li>
-    <li><b>Privacy-friendly</b> — requests are sent through a lightweight proxy only to bypass browser CORS; we do not store your requests.</li>
-    <li><b>Fast</b> — instant loading, no desktop app to install or update.</li>
-    <li><b>Cross-platform</b> — works on any browser, any operating system.</li>
-  </ul>
-
-  <p>Also try <a href="/json">JSON Lab</a> for formatting and validating the response bodies you receive, and <a href="/timestamp">Epoch Lab</a> for converting timestamps found in API payloads.</p>
-</section>
 
 <!-- cURL import modal -->
 <div class="modal-overlay" id="curlModal">
