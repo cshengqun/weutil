@@ -641,12 +641,14 @@
     cmd = cmd.replace(/^curl\s+/i, '');
 
     var result = { method: 'GET', url: '', headers: {}, body: null, bodyType: 'none' };
+    var methodExplicit = false;
     var tokens = tokenize(cmd);
 
     for (var i = 0; i < tokens.length; i++) {
       var tok = tokens[i];
       if (tok === '-X' || tok === '--request') {
         result.method = tokens[++i].toUpperCase();
+        methodExplicit = true;
       } else if (tok === '-H' || tok === '--header') {
         var hdr = tokens[++i];
         var colon = hdr.indexOf(':');
@@ -655,13 +657,17 @@
           var v = hdr.substring(colon + 1).trim();
           result.headers[k] = v;
         }
+      } else if (tok === '-b' || tok === '--cookie') {
+        result.headers['Cookie'] = tokens[++i];
       } else if (tok === '-d' || tok === '--data' || tok === '--data-raw' || tok === '--data-binary') {
         result.body = tokens[++i];
         result.bodyType = 'raw';
+        if (!methodExplicit) result.method = 'POST';
         if (!result.headers['Content-Type']) result.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       } else if (tok === '--data-urlencode') {
         result.body = (result.body ? result.body + '&' : '') + tokens[++i];
         result.bodyType = 'form';
+        if (!methodExplicit) result.method = 'POST';
         if (!result.headers['Content-Type']) result.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       } else if (tok === '-u' || tok === '--user') {
         result.headers['Authorization'] = 'Basic ' + btoa(tokens[++i]);
@@ -670,6 +676,7 @@
       } else if (tok === '-F' || tok === '--form') {
         result.body = (result.body ? result.body + '&' : '') + tokens[++i];
         result.bodyType = 'form';
+        if (!methodExplicit) result.method = 'POST';
         if (!result.headers['Content-Type']) result.headers['Content-Type'] = 'multipart/form-data';
       } else if (tok === '-i' || tok === '--include' || tok === '-v' || tok === '--verbose' || tok === '-k' || tok === '--insecure' || tok === '-L' || tok === '--location' || tok === '-s' || tok === '--silent') {
         // ignore
