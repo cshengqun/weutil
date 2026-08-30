@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary SEO -->
+<title>Support WeUtil - Donate & Sponsor Free Developer Tools</title>
+<meta name="description" content="Support WeUtil, a free and privacy-first developer toolbox. Donate via PayPal or WeChat to help keep the tools free, ad-free, and running locally in your browser.">
+<meta name="keywords" content="donate,sponsor,support,weutil,paypal donation,wechat reward,free developer tools">
+<meta name="robots" content="index, follow">
+<meta name="author" content="WeUtil">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="canonical" href="https://weutil.top/sponsor">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Support WeUtil - Donate & Sponsor Free Developer Tools">
+<meta property="og:description" content="WeUtil is a free, privacy-first developer toolbox. Support via PayPal or WeChat to keep tools free and ad-free.">
+<meta property="og:url" content="https://weutil.top/sponsor">
+<meta property="og:site_name" content="WeUtil">
+<meta property="og:locale" content="en_US">
+
+<!-- JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "DonateAction",
+  "name": "Support WeUtil",
+  "url": "https://weutil.top/sponsor",
+  "description": "Donate to support WeUtil, a free online developer toolbox."
+}
+</script>
+
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --font-ui: 'Space Grotesk', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --bg: #0b1020;
+    --bg-2: #101731;
+    --bg-3: #17203f;
+    --bg-4: #202b50;
+    --border: #25315a;
+    --border-2: #34406e;
+    --text: #e9edf7;
+    --dim: #9aa6c4;
+    --faint: #5f6c90;
+    --accent: #e8a25c;
+    --accent-hi: #f6c28a;
+    --accent-ink: #201403;
+    --paypal-yellow: #FFD140;
+    --wechat-green: #07c160;
+    --shadow: 0 14px 40px rgba(0,0,0,.42);
+    --radius: 12px;
+  }
+  html[data-theme="light"] {
+    --bg: #f2f5fb;
+    --bg-2: #ffffff;
+    --bg-3: #edf1f9;
+    --bg-4: #e3e9f5;
+    --border: #d9e0ef;
+    --border-2: #c2cce2;
+    --text: #1c2334;
+    --dim: #55617e;
+    --faint: #8a94ad;
+    --accent: #c67d34;
+    --accent-hi: #a9641f;
+    --accent-ink: #ffffff;
+    --shadow: 0 14px 40px rgba(30, 45, 90, .16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-ui);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(232,162,92,.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(86,140,235,.10), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: inherit; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(6px);
+    flex: 0 0 auto;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; letter-spacing: .2px;
+    text-decoration: none; color: inherit;
+  }
+  .brand .logo {
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hi));
+    color: var(--accent-ink);
+    box-shadow: 0 4px 14px rgba(232,162,92,.35);
+  }
+  .brand .name b { color: var(--accent); font-weight: 700; }
+  .brand .tag { font-size: 12px; color: var(--dim); font-weight: 400; margin-left: 2px; }
+  .toolnav { display: flex; gap: 4px; margin-left: 6px; }
+  .toolnav a {
+    padding: 5px 11px; border-radius: 8px;
+    font-size: 13px; color: var(--dim); text-decoration: none;
+    border: 1px solid transparent;
+    transition: background .15s, color .15s;
+  }
+  .toolnav a:hover { background: var(--bg-3); color: var(--text); }
+  .toolnav a.active { background: var(--bg-3); color: var(--accent); font-weight: 600; border-color: var(--border); }
+  .topbar .spacer { flex: 1; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 13px; border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg-2); color: var(--text);
+    font-size: 13.5px; font-weight: 500;
+    transition: background .15s, border-color .15s;
+    text-decoration: none; user-select: none;
+  }
+  .btn:hover { background: var(--bg-3); border-color: var(--border-2); }
+  .btn.ghost-icon { padding: 8px; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 48px 24px 28px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 700; margin: 0 0 12px;
+    letter-spacing: -.3px;
+  }
+  .hero h1 b { color: var(--accent); }
+  .hero p {
+    font-size: 15px; color: var(--dim);
+    line-height: 1.7; margin: 0 auto;
+    max-width: 560px;
+  }
+
+  /* Donation cards */
+  .donate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 10px 24px 36px;
+    width: 100%;
+  }
+  .donate-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: border-color .2s, transform .15s;
+  }
+  .donate-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .donate-card .dc-icon {
+    width: 48px; height: 48px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    font-size: 22px;
+  }
+  .donate-card.paypal .dc-icon {
+    background: rgba(255,209,64,.15);
+    color: var(--paypal-yellow);
+  }
+  .donate-card.wechat .dc-icon {
+    background: rgba(7,193,96,.15);
+    color: var(--wechat-green);
+  }
+  .donate-card h2 {
+    font-size: 18px; font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .donate-card .dc-desc {
+    font-size: 13px; color: var(--dim);
+    line-height: 1.6; margin: 0 0 20px;
+  }
+  .donate-card .dc-body {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* PayPal button wrapper */
+  .paypal-btn-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .paypal-btn-wrap form {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .paypal-btn-wrap input[type="submit"] {
+    text-align: center;
+    border: none;
+    border-radius: 8px;
+    min-width: 180px;
+    padding: 0 24px;
+    height: 44px;
+    font-weight: 700;
+    background-color: var(--paypal-yellow);
+    color: #000;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    cursor: pointer;
+    transition: filter .15s, transform .05s;
+  }
+  .paypal-btn-wrap input[type="submit"]:hover { filter: brightness(1.08); }
+  .paypal-btn-wrap input[type="submit"]:active { transform: translateY(1px); }
+  .paypal-btn-wrap .cards-img { height: 22px; }
+  .paypal-btn-wrap .pp-note {
+    font-size: 11px; color: var(--faint);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .paypal-btn-wrap .pp-note img { height: 14px; }
+
+  /* WeChat QR */
+  .wechat-qr {
+    width: 200px;
+    height: 200px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #fff;
+    display: grid;
+    place-items: center;
+  }
+  .wechat-qr img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .wechat-hint {
+    font-size: 12px; color: var(--dim);
+    margin-top: 4px;
+  }
+
+  /* Why donate */
+  .why-section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 24px 40px;
+    width: 100%;
+  }
+  .why-section h2 {
+    font-size: 20px; font-weight: 700;
+    margin: 0 0 16px;
+    text-align: center;
+  }
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .why-item {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .why-item .wi-icon {
+    font-size: 24px; margin-bottom: 8px;
+  }
+  .why-item h3 {
+    font-size: 14px; font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .why-item p {
+    font-size: 12px; color: var(--dim);
+    line-height: 1.5; margin: 0;
+  }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--faint);
+    flex: 0 0 auto;
+    margin-top: auto;
+  }
+  .footer a { color: var(--dim); text-decoration: none; }
+  .footer a:hover { color: var(--accent); }
+  .footer .links { display: flex; gap: 16px; justify-content: center; margin-bottom: 6px; }
+
+  .thank-you {
+    text-align: center;
+    font-size: 13px;
+    color: var(--dim);
+    padding: 0 24px 32px;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .thank-you b { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .brand .tag { display: none; }
+    .hero { padding: 32px 18px 20px; }
+    .donate-grid { padding: 10px 16px 28px; }
+    .why-section { padding: 20px 16px 32px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="logo">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="3" width="7.6" height="7.6" rx="1.6"/><rect x="3" y="13.4" width="7.6" height="7.6" rx="1.6"/><rect x="13.4" y="13.4" width="7.6" height="7.6" rx="1.6"/></svg>
+      </span>
+      <span class="name">We<b>Util</b></span>
+      <span class="tag">Developer Toolbox</span>
+    </a>
+    <nav class="toolnav" aria-label="Tools">
+      <a href="index.html">Home</a>
+      <a href="json.html">JSON Lab</a>
+      <a href="timestamp.html">Epoch Lab</a>
+      <a class="active" href="sponsor.html" aria-current="page">Sponsor</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn ghost-icon" id="btnTheme" title="Toggle light / dark theme">
+      <svg id="iconSun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg id="iconMoon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    </button>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Support <b>WeUtil</b></h1>
+    <p>WeUtil is free, open, and privacy-first. Every tool runs 100% in your browser — no ads, no tracking, no data leaves your device. Your support helps keep it that way and fuels new tools.</p>
+  </section>
+
+  <!-- Donation methods -->
+  <section class="donate-grid" aria-label="Donation methods">
+
+    <!-- PayPal -->
+    <div class="donate-card paypal">
+      <div class="dc-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.027.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/></svg>
+      </div>
+      <h2>PayPal</h2>
+      <p class="dc-desc">For global users. Supports credit cards, debit cards, and PayPal balance. Secure checkout powered by PayPal.</p>
+      <div class="dc-body">
+        <div class="paypal-btn-wrap">
+          <form action="https://www.paypal.com/ncp/payment/VSXW6J48RC8NY" method="post" target="_blank">
+            <input type="submit" value="Donate with PayPal" />
+            <img class="cards-img" src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="Accepted cards" />
+            <span class="pp-note">Powered by <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" /></span>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- WeChat -->
+    <div class="donate-card wechat">
+      <div class="dc-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+      </div>
+      <h2>微信赞赏</h2>
+      <p class="dc-desc">For users in China. Scan the QR code with WeChat to tip any amount. No registration needed.</p>
+      <div class="dc-body">
+        <div class="wechat-qr">
+          <img src="wechat-donate.jpg" alt="WeChat reward code" />
+        </div>
+        <p class="wechat-hint">微信扫码赞赏，感谢支持！</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Thank you -->
+  <p class="thank-you">Every contribution, big or small, makes a real difference. <b>Thank you</b> for helping keep WeUtil free and independent.</p>
+
+  <!-- Why donate -->
+  <section class="why-section">
+    <h2>Where your support goes</h2>
+    <div class="why-grid">
+      <div class="why-item">
+        <div class="wi-icon">🌐</div>
+        <h3>Domain & Hosting</h3>
+        <p>weutil.top domain and hosting costs to keep the site online.</p>
+      </div>
+      <div class="why-item">
+        <div class="wi-icon">🛠️</div>
+        <h3>New Tools</h3>
+        <p>HTTP client, regex tester, base64 converter, and more on the roadmap.</p>
+      </div>
+      <div class="why-item">
+        <div class="wi-icon">🔒</div>
+        <h3>Privacy First</h3>
+        <p>No ads, no tracking, no data collection. Everything runs locally.</p>
+      </div>
+      <div class="why-item">
+        <div class="wi-icon">⏱️</div>
+        <h3>Development Time</h3>
+        <p>Hundreds of hours designing, coding, and maintaining each tool.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="json.html">JSON Lab</a>
+      <a href="timestamp.html">Epoch Lab</a>
+    </div>
+    <div>© 2026 WeUtil · Free online developer tools · <a href="https://weutil.top/">weutil.top</a></div>
+  </footer>
+
+<script>
+(function () {
+  'use strict';
+  document.getElementById('btnTheme').addEventListener('click', function () {
+    var html = document.documentElement;
+    var dark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', dark ? 'light' : 'dark');
+    document.getElementById('iconSun').style.display = dark ? 'none' : '';
+    document.getElementById('iconMoon').style.display = dark ? '' : 'none';
+  });
+})();
+</script>
+</body>
+</html>
