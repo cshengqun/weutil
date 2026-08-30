@@ -116,7 +116,7 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     margin: 0;
     font-family: var(--font-ui);
@@ -125,6 +125,10 @@
       radial-gradient(900px 500px at -10% 110%, rgba(86,140,235,.10), transparent 55%),
       var(--bg);
     color: var(--text);
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  .app-shell {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -458,6 +462,23 @@
   .statusbar .stats span { color: var(--faint); }
   .statusbar .stats b { color: var(--text); font-weight: 600; font-family: var(--font-mono); }
 
+  /* SEO content (below the fold) */
+  .seo-content {
+    max-width: 820px; margin: 0 auto; padding: 40px 24px 60px;
+    color: var(--dim); line-height: 1.75; font-size: 14.5px;
+  }
+  .seo-content h2 { color: var(--text); font-size: 22px; font-weight: 700; margin: 0 0 12px; }
+  .seo-content h3 { color: var(--text); font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
+  .seo-content p { margin: 0 0 12px; }
+  .seo-content ul { margin: 0 0 12px; padding-left: 20px; }
+  .seo-content li { margin-bottom: 6px; }
+  .seo-content a { color: var(--accent); text-decoration: none; }
+  .seo-content a:hover { text-decoration: underline; }
+  .seo-content code {
+    font-family: var(--font-mono); font-size: 12.5px;
+    background: var(--bg-3); padding: 1px 6px; border-radius: 4px; color: var(--accent-hi);
+  }
+
   @media (max-width: 900px) {
     body { overflow: auto; height: auto; }
     .workspace { grid-template-columns: 1fr; height: auto; }
@@ -467,7 +488,7 @@
 </style>
 </head>
 <body>
-
+<div class="app-shell">
   <!-- ===================== Top bar ===================== -->
   <header class="topbar">
     <a class="brand" href="/">
@@ -573,6 +594,43 @@
       <span>· <b id="statMs">—</b></span>
     </div>
   </footer>
+</div><!-- /app-shell -->
+
+<!-- ===================== SEO content ===================== -->
+<section class="seo-content">
+  <h2>Unix Timestamp Converter &amp; Epoch Time Tool</h2>
+  <p>WeUtil Epoch Lab is a free, browser-based unix timestamp converter. Convert epoch time to human-readable dates and back, in any time zone — no installation, no sign-up, everything runs locally in your browser.</p>
+
+  <h3>Timestamp to date</h3>
+  <p>Paste a unix timestamp and instantly see the corresponding date and time. Epoch Lab auto-detects the unit from the digit length — seconds (10 digits), milliseconds (13 digits), microseconds (16 digits), and nanoseconds (19 digits) are all recognized automatically.</p>
+
+  <h3>Date to timestamp</h3>
+  <p>Enter a date in <code>YYYY-MM-DD HH:mm:ss</code> format, ISO 8601 with timezone offset, or a plain date, and get the epoch in seconds, milliseconds, microseconds, and nanoseconds simultaneously.</p>
+
+  <h3>Any time zone</h3>
+  <p>Because servers and teams span the globe, Epoch Lab lets you view the same instant in any time zone. Switch between UTC, your local zone, or any IANA zone such as <code>Asia/Tokyo</code>, <code>America/New_York</code>, or <code>Europe/London</code>. Daylight saving time is handled automatically.</p>
+
+  <h3>Multiple output formats</h3>
+  <ul>
+    <li><b>ISO 8601</b> — <code>2026-08-30T12:00:00Z</code></li>
+    <li><b>RFC 2822</b> — <code>Sun, 30 Aug 2026 12:00:00 GMT</code></li>
+    <li><b>Locale string</b> — localized date and time</li>
+    <li><b>Relative time</b> — "3 hours ago", "in 2 days"</li>
+  </ul>
+
+  <h3>Live clock</h3>
+  <p>Copy the current epoch in seconds or milliseconds with one click. The clock updates in real time, so you always have the current timestamp ready for logs, APIs, or databases.</p>
+
+  <h3>Why use WeUtil Epoch Lab?</h3>
+  <ul>
+    <li><b>Privacy first</b> — your input never leaves your browser.</li>
+    <li><b>Instant</b> — conversions happen as you type, no page reloads.</li>
+    <li><b>Free forever</b> — no account, no rate limits.</li>
+    <li><b>Dark &amp; light mode</b> — comfortable for any environment.</li>
+  </ul>
+
+  <p>Also try <a href="/json">JSON Lab</a> for formatting and validating JSON payloads that contain timestamps, and <a href="/http">HTTP Client</a> for sending API requests and inspecting their responses.</p>
+</section>
 
 <script>
 (function () {
