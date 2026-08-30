@@ -79,7 +79,8 @@ export default async function handler(req, res) {
     : 'GET';
 
   const forwardHeaders = safeHeaders(headers);
-  const hasBody = !['GET', 'HEAD'].includes(safeMethod) && body !== undefined && body !== null && body !== '';
+  // Allow body on GET (non-standard but some APIs use it); HEAD must never have a body
+  const hasBody = safeMethod !== 'HEAD' && body !== undefined && body !== null && body !== '';
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
