@@ -124,8 +124,8 @@
     color: var(--text);
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    overflow-y: auto;
+    height: 100vh;
+    overflow: hidden;
   }
 
   button { font-family: inherit; cursor: pointer; }
@@ -889,29 +889,6 @@
   updateFromTs();
 })();
 </script>
-
-  <!-- ===================== Feature details (SEO) ===================== -->
-  <section class="features">
-    <h2>About Epoch Lab</h2>
-    <p class="lead">Epoch Lab is a free online unix timestamp converter. Convert epoch time to human-readable dates and back, with support for any time zone. All processing happens locally in your browser.</p>
-
-    <div class="feature-block">
-      <h3>What you can do</h3>
-      <ul>
-        <li><b>Timestamp to date</b> — paste an epoch number and instantly get readable time. Auto-detects seconds, milliseconds, microseconds and nanoseconds from the digit length.</li>
-        <li><b>Date to timestamp</b> — type <code>YYYY-MM-DD HH:mm:ss</code>, ISO 8601 with offset, or a plain date; output in seconds, milliseconds, microseconds and nanoseconds.</li>
-        <li><b>Any time zone</b> — switch output between UTC, your local zone, or any IANA zone such as Asia/Tokyo, America/New_York, or Europe/London. Daylight saving time is handled automatically.</li>
-        <li><b>Multiple formats</b> — ISO 8601, RFC 2822, locale string, and relative time ("3 hours ago").</li>
-        <li><b>Live clock</b> — copy the current epoch in seconds or milliseconds with one click; press ⌘/Ctrl+Enter to load "now".</li>
-      </ul>
-    </div>
-
-    <div class="feature-block">
-      <h3>When to use it</h3>
-      <p>Decode a timestamp from a log file or database, generate an epoch for an API request, check what time a server event happened in another time zone, or compare the same instant across UTC and your local time. Everything works offline once the page loads.</p>
-      <p>Need to format JSON? Try <a href="json.html">JSON Lab →</a></p>
-    </div>
-  </section>
 
 </body>
 </html>

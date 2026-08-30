@@ -150,8 +150,8 @@
     color: var(--text);
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    overflow-y: auto;
+    height: 100vh;
+    overflow: hidden;
   }
 
   button { font-family: inherit; cursor: pointer; }
@@ -860,30 +860,6 @@
       <span>Size <b id="statSize">–</b></span>
     </div>
   </footer>
-
-  <!-- ===================== Feature details (SEO) ===================== -->
-  <section class="features">
-    <h2>About JSON Lab</h2>
-    <p class="lead">JSON Lab is a free online JSON formatter, validator, and diff tool. It runs entirely in your browser — no data is uploaded to any server.</p>
-
-    <div class="feature-block">
-      <h3>What you can do</h3>
-      <ul>
-        <li><b>Format &amp; beautify</b> — indent minified or messy JSON with 2-space formatting and syntax highlighting in one click.</li>
-        <li><b>Minify</b> — compress JSON to a single line for API payloads, config files, or storage.</li>
-        <li><b>Validate</b> — catch syntax errors with precise line and column location, so you fix the exact spot.</li>
-        <li><b>Structured tree view</b> — expand, collapse, and search nested objects and arrays; copy any value or its JSONPath.</li>
-        <li><b>Two-version diff</b> — compare two JSON documents and see exactly which keys were added, removed, or changed.</li>
-        <li><b>Sort keys</b> — recursively sort object keys alphabetically for consistent diffs and version control.</li>
-      </ul>
-    </div>
-
-    <div class="feature-block">
-      <h3>When to use it</h3>
-      <p>Paste a minified API response to read it, validate a config before deploying, compare two versions of a JSON file to find what changed, or explore a deeply nested object with the tree view. Everything works offline once the page loads.</p>
-      <p>Need to convert timestamps? Try <a href="timestamp.html">Epoch Lab →</a></p>
-    </div>
-  </section>
 
   <div id="toast"></div>
 
