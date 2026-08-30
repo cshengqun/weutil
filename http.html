@@ -214,6 +214,38 @@
   .resp-body .tok-num { color: var(--tok-num); }
   .resp-body .tok-bool { color: var(--tok-bool); }
   .resp-body .tok-null { color: var(--tok-null); }
+
+  /* Tree view */
+  .resp-subtabs { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--border); background: var(--bg-3); flex: 0 0 auto; }
+  .subtab { padding: 3px 10px; border-radius: 5px; font-size: 11.5px; color: var(--dim); cursor: pointer; border: 1px solid transparent; background: transparent; transition: all .15s; }
+  .subtab:hover { color: var(--text); background: var(--bg-4); }
+  .subtab.active { color: var(--accent); background: var(--bg-4); font-weight: 600; border-color: var(--border); }
+  .tree-view { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; padding: 8px 12px; }
+  .tree-row { position: relative; }
+  .tree-row .tree-line { display: flex; align-items: baseline; gap: 4px; padding: 1px 0; border-radius: 4px; }
+  .tree-row .tree-line:hover { background: var(--bg-3); }
+  .tree-caret {
+    width: 16px; height: 16px; display: inline-grid; place-items: center;
+    border: none; background: transparent; color: var(--faint); cursor: pointer;
+    font-size: 9px; transition: transform .15s; flex: 0 0 auto; padding: 0;
+  }
+  .tree-caret.open { transform: rotate(90deg); }
+  .tree-caret-spacer { width: 16px; flex: 0 0 auto; display: inline-block; }
+  .tree-key { color: var(--tok-key); font-weight: 500; }
+  .tree-sep { color: var(--faint); }
+  .tree-val-str { color: var(--tok-str); }
+  .tree-val-num { color: var(--tok-num); }
+  .tree-val-bool { color: var(--tok-bool); }
+  .tree-val-null { color: var(--tok-null); font-style: italic; }
+  .tree-badge {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600;
+    background: var(--bg-4); color: var(--dim); margin-left: 2px;
+  }
+  .tree-badge.object { color: var(--tok-key); }
+  .tree-badge.array { color: var(--tok-bool); }
+  .tree-preview { color: var(--faint); font-size: 11px; margin-left: 4px; }
+  .tree-children { margin-left: 14px; border-left: 1px solid var(--border); padding-left: 8px; }
+  .tree-children.collapsed { display: none; }
   .resp-headers { flex: 1; overflow: auto; padding: 10px 12px; font-family: var(--font-mono); font-size: 12px; }
   .resp-headers .hdr-row { display: flex; gap: 8px; margin-bottom: 4px; }
   .resp-headers .hdr-k { color: var(--tok-key); font-weight: 600; min-width: 160px; }
@@ -372,7 +404,12 @@
           </div>
         </div>
         <div class="tab-content active" id="rtab-body" style="display:none;">
-          <div class="resp-body" id="respBody"></div>
+          <div class="resp-subtabs" id="respSubtabs" style="display:none;">
+            <button class="subtab active" data-view="tree">Tree</button>
+            <button class="subtab" data-view="raw">Raw</button>
+          </div>
+          <div class="resp-body tree-view" id="respTree"></div>
+          <div class="resp-body" id="respRaw" style="display:none;white-space:pre-wrap;"></div>
         </div>
         <div class="tab-content" id="rtab-headers" style="display:none;">
           <div class="resp-headers" id="respHeaders"></div>
@@ -546,7 +583,9 @@
     $('respTabs').style.display = 'none';
     $('rtab-body').style.display = 'none';
     $('rtab-headers').style.display = 'none';
-    $('respBody').innerHTML = '';
+    $('respTree').innerHTML = '';
+    $('respRaw').textContent = '';
+    $('respSubtabs').style.display = 'none';
     $('respHeaders').innerHTML = '';
 
     try {
@@ -588,18 +627,31 @@
 
     // Body
     var ct = (data.headers['content-type'] || data.headers['Content-Type'] || '').toLowerCase();
-    if (ct.includes('json') && data.body) {
+    var isJson = ct.includes('json') && data.body;
+    if (isJson) {
       try {
-        var parsed = JSON.parse(data.body);
-        $('respBody').innerHTML = syntaxHighlight(JSON.stringify(parsed, null, 2));
+        lastParsedResponse = JSON.parse(data.body);
+        $('respTree').innerHTML = renderTreeFromParsed(lastParsedResponse, true);
+        $('respRaw').textContent = JSON.stringify(lastParsedResponse, null, 2);
+        $('respSubtabs').style.display = 'flex';
+        $('respTree').style.display = '';
+        $('respRaw').style.display = 'none';
+        document.querySelectorAll('.subtab').forEach(function (t) { t.classList.remove('active'); });
+        document.querySelector('.subtab[data-view="tree"]').classList.add('active');
       } catch {
-        $('respBody').textContent = data.body;
+        lastParsedResponse = null;
+        $('respTree').textContent = data.body;
+        $('respRaw').textContent = data.body;
+        $('respSubtabs').style.display = 'none';
       }
     } else {
-      $('respBody').textContent = data.body || '(empty response body)';
+      lastParsedResponse = null;
+      $('respTree').textContent = data.body || '(empty response body)';
+      $('respRaw').textContent = data.body || '(empty response body)';
+      $('respSubtabs').style.display = 'none';
     }
     if (data.truncated) {
-      $('respBody').textContent += '\n\n[Response truncated: exceeds 10MB limit]';
+      $('respRaw').textContent += '\n\n[Response truncated: exceeds 10MB limit]';
     }
 
     // Headers
@@ -619,7 +671,11 @@
     $('respMeta').textContent = elapsed ? elapsed + 'ms' : '';
     $('respTabs').style.display = 'flex';
     $('rtab-body').style.display = 'flex';
-    $('respBody').textContent = msg;
+    $('respSubtabs').style.display = 'none';
+    $('respTree').textContent = msg;
+    $('respRaw').textContent = msg;
+    $('respTree').style.display = '';
+    $('respRaw').style.display = 'none';
     $('statStatus').textContent = 'Error';
   }
 
@@ -632,6 +688,99 @@
       return '<span class="' + cls + '">' + match + '</span>';
     });
   }
+
+  // ===== JSON Tree view =====
+  var lastParsedResponse = null;
+  var treeExpanded = new Set();
+
+  function typeOf(v) {
+    if (v === null) return 'null';
+    if (Array.isArray(v)) return 'array';
+    return typeof v;
+  }
+
+  function treePathKey(path) {
+    if (!path.length) return '$';
+    return path.map(function (p) { return typeof p === 'number' ? '[' + p + ']' : '.' + p; }).join('');
+  }
+
+  function renderTreeNode(key, value, path, isRoot) {
+    var t = typeOf(value);
+    var pkey = treePathKey(path);
+    var keyHtml = isRoot
+      ? '<span class="tree-key" style="color:var(--accent);font-weight:700">$</span>'
+      : '<span class="tree-key">' + esc(String(key)) + '</span>';
+
+    if (t === 'object' || t === 'array') {
+      var isArr = t === 'array';
+      var entries = isArr
+        ? value.map(function (v, i) { return [i, v]; })
+        : Object.keys(value).map(function (k) { return [k, value[k]]; });
+      var open = treeExpanded.has(pkey);
+      var badge = '<span class="tree-badge ' + t + '">' + (isArr ? 'array[' + entries.length + ']' : 'object{' + entries.length + '}') + '</span>';
+      var preview = open ? '' : '<span class="tree-preview">' + (isArr ? '[…]' : '{…}') + '</span>';
+      var caret = '<button class="tree-caret' + (open ? ' open' : '') + '" data-path="' + esc(pkey) + '" aria-label="Toggle">▶</button>';
+      var children = '';
+      if (open && entries.length > 0) {
+        children = '<div class="tree-children">' + entries.map(function (e) {
+          return renderTreeNode(e[0], e[1], path.concat(e[0]), false);
+        }).join('') + '</div>';
+      }
+      return '<div class="tree-row" data-path="' + esc(pkey) + '">' +
+        '<div class="tree-line">' + caret + keyHtml + '<span class="tree-sep">:</span>' + badge + preview + '</div>' +
+        children + '</div>';
+    }
+
+    var valClass = 'tree-val-' + t;
+    var valHtml = '';
+    if (t === 'string') valHtml = '<span class="' + valClass + '">"' + esc(value) + '"</span>';
+    else if (t === 'number') valHtml = '<span class="' + valClass + '">' + value + '</span>';
+    else if (t === 'boolean') valHtml = '<span class="' + valClass + '">' + value + '</span>';
+    else valHtml = '<span class="' + valClass + '">null</span>';
+
+    return '<div class="tree-row">' +
+      '<div class="tree-line"><span class="tree-caret-spacer"></span>' + keyHtml + '<span class="tree-sep">:</span>' + valHtml + '</div></div>';
+  }
+
+  function renderTreeFromParsed(parsed, isFirst) {
+    if (isFirst) {
+      treeExpanded.clear();
+      treeExpanded.add('$');
+      var t = typeOf(parsed);
+      if (t === 'object' || t === 'array') {
+        var entries = t === 'array'
+          ? parsed.map(function (v, i) { return [i, v]; })
+          : Object.keys(parsed).map(function (k) { return [k, parsed[k]]; });
+        entries.forEach(function (e) {
+          if (typeOf(e[1]) === 'object' || typeOf(e[1]) === 'array') {
+            treeExpanded.add(treePathKey([e[0]]));
+          }
+        });
+      }
+    }
+    return renderTreeNode(null, parsed, [], true);
+  }
+
+  // Tree caret click (re-render to preserve state)
+  $('respTree').addEventListener('click', function (e) {
+    var caret = e.target.closest('.tree-caret');
+    if (!caret || !lastParsedResponse) return;
+    var path = caret.dataset.path;
+    if (treeExpanded.has(path)) treeExpanded.delete(path);
+    else treeExpanded.add(path);
+    $('respTree').innerHTML = renderTreeFromParsed(lastParsedResponse, false);
+  });
+
+  // Tree / Raw subtab switch
+  document.querySelectorAll('.subtab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.subtab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var view = tab.dataset.view;
+      $('respTree').style.display = (view === 'tree') ? '' : 'none';
+      $('respRaw').style.display = (view === 'raw') ? '' : 'none';
+    });
+  });
 
   // ===== cURL parser =====
   function parseCurl(cmd) {
