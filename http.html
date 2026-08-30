@@ -406,10 +406,10 @@
         <div class="tab-content active" id="rtab-body" style="display:none;">
           <div class="resp-subtabs" id="respSubtabs" style="display:none;">
             <button class="subtab active" data-view="tree">Tree</button>
-            <button class="subtab" data-view="raw">Raw</button>
+            <button class="subtab" data-view="formatted">Formatted</button>
           </div>
           <div class="resp-body tree-view" id="respTree"></div>
-          <div class="resp-body" id="respRaw" style="display:none;white-space:pre-wrap;"></div>
+          <div class="resp-body" id="respFormatted" style="display:none;"></div>
         </div>
         <div class="tab-content" id="rtab-headers" style="display:none;">
           <div class="resp-headers" id="respHeaders"></div>
@@ -584,7 +584,7 @@
     $('rtab-body').style.display = 'none';
     $('rtab-headers').style.display = 'none';
     $('respTree').innerHTML = '';
-    $('respRaw').textContent = '';
+    $('respFormatted').innerHTML = '';
     $('respSubtabs').style.display = 'none';
     $('respHeaders').innerHTML = '';
 
@@ -632,26 +632,26 @@
       try {
         lastParsedResponse = JSON.parse(data.body);
         $('respTree').innerHTML = renderTreeFromParsed(lastParsedResponse, true);
-        $('respRaw').textContent = JSON.stringify(lastParsedResponse, null, 2);
+        $('respFormatted').innerHTML = syntaxHighlight(JSON.stringify(lastParsedResponse, null, 2));
         $('respSubtabs').style.display = 'flex';
         $('respTree').style.display = '';
-        $('respRaw').style.display = 'none';
+        $('respFormatted').style.display = 'none';
         document.querySelectorAll('.subtab').forEach(function (t) { t.classList.remove('active'); });
         document.querySelector('.subtab[data-view="tree"]').classList.add('active');
       } catch {
         lastParsedResponse = null;
         $('respTree').textContent = data.body;
-        $('respRaw').textContent = data.body;
+        $('respFormatted').textContent = data.body;
         $('respSubtabs').style.display = 'none';
       }
     } else {
       lastParsedResponse = null;
       $('respTree').textContent = data.body || '(empty response body)';
-      $('respRaw').textContent = data.body || '(empty response body)';
+      $('respFormatted').textContent = data.body || '(empty response body)';
       $('respSubtabs').style.display = 'none';
     }
     if (data.truncated) {
-      $('respRaw').textContent += '\n\n[Response truncated: exceeds 10MB limit]';
+      $('respFormatted').textContent += '\n\n[Response truncated: exceeds 10MB limit]';
     }
 
     // Headers
@@ -673,9 +673,9 @@
     $('rtab-body').style.display = 'flex';
     $('respSubtabs').style.display = 'none';
     $('respTree').textContent = msg;
-    $('respRaw').textContent = msg;
+    $('respFormatted').textContent = msg;
     $('respTree').style.display = '';
-    $('respRaw').style.display = 'none';
+    $('respFormatted').style.display = 'none';
     $('statStatus').textContent = 'Error';
   }
 
@@ -778,7 +778,7 @@
       tab.classList.add('active');
       var view = tab.dataset.view;
       $('respTree').style.display = (view === 'tree') ? '' : 'none';
-      $('respRaw').style.display = (view === 'raw') ? '' : 'none';
+      $('respFormatted').style.display = (view === 'formatted') ? '' : 'none';
     });
   });
 
