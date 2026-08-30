@@ -231,9 +231,9 @@
   }
   .tree-caret.open { transform: rotate(90deg); }
   .tree-caret-spacer { width: 16px; flex: 0 0 auto; display: inline-block; }
-  .tree-key { color: var(--tok-key); font-weight: 500; }
+  .tree-key { color: var(--tok-key); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
   .tree-sep { color: var(--faint); }
-  .tree-val-str { color: var(--tok-str); }
+  .tree-val-str { color: var(--tok-str); word-break: break-all; overflow-wrap: anywhere; }
   .tree-val-num { color: var(--tok-num); }
   .tree-val-bool { color: var(--tok-bool); }
   .tree-val-null { color: var(--tok-null); font-style: italic; }
