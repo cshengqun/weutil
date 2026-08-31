@@ -276,6 +276,36 @@
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
   .modal-error { color: var(--err); font-size: 12.5px; margin-top: 8px; min-height: 18px; }
 
+  /* History modal */
+  .modal-wide { max-width: 760px; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  #historyList { max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .history-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+    cursor: pointer; border: 1px solid transparent; transition: background .15s, border-color .15s;
+  }
+  .history-row:hover { background: var(--bg-3); border-color: var(--border); }
+  .method-badge {
+    padding: 2px 8px; border-radius: 5px; font-family: var(--font-mono);
+    font-size: 11px; font-weight: 700; flex: 0 0 auto;
+  }
+  .method-badge.m-get { color: var(--ok); background: rgba(123,211,154,.12); }
+  .method-badge.m-post { color: var(--warn); background: rgba(240,198,116,.12); }
+  .method-badge.m-put { color: var(--tok-key); background: rgba(134,185,240,.12); }
+  .method-badge.m-delete { color: var(--err); background: rgba(240,131,124,.12); }
+  .method-badge.m-patch, .method-badge.m-head, .method-badge.m-options { color: var(--accent); background: rgba(232,162,92,.12); }
+  .hist-url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 12.5px; }
+  .hist-time { color: var(--faint); font-size: 11.5px; font-family: var(--font-mono); flex: 0 0 auto; }
+  .hist-count { color: var(--dim); font-size: 11px; background: var(--bg-4); border-radius: 4px; padding: 1px 6px; flex: 0 0 auto; }
+  .hist-del { width: 24px; height: 24px; flex: 0 0 auto; }
+  #histCount { color: var(--dim); font-weight: 500; }
+
+  /* Response copy button */
+  .btn-copy { transition: color .15s, border-color .15s, background .15s; }
+  .btn-copy.copied { color: var(--ok); border-color: var(--ok); background: rgba(123,211,154,.1); }
+  .btn-copy.failed { color: var(--err); border-color: var(--err); background: rgba(240,131,124,.1); }
+
   /* Status bar */
   .statusbar {
     display: flex; align-items: center; gap: 12px; padding: 6px 16px;
@@ -328,6 +358,10 @@
     <button class="btn" id="btnCurl" title="Import cURL command">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
       cURL
+    </button>
+    <button class="btn" id="btnHistory" title="Request history">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      History<span id="histCount"></span>
     </button>
     <button class="btn primary" id="btnSend">Send</button>
   </div>
@@ -391,6 +425,9 @@
           <span class="resp-meta" id="respMeta"></span>
         </div>
         <div class="spacer" style="flex:1"></div>
+        <button class="btn ghost-icon btn-copy" id="btnCopyResp" title="Copy response" style="display:none">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        </button>
         <div class="tabs" id="respTabs" style="display:none;">
           <button class="tab active" data-rtab="body">Body</button>
           <button class="tab" data-rtab="headers">Headers</button>
@@ -434,6 +471,20 @@
     <div class="modal-actions">
       <button class="btn" id="curlCancel">Cancel</button>
       <button class="btn primary" id="curlImport">Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- History modal -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h3>Request History</h3>
+      <button class="btn" id="historyClear" style="display:none">Clear All</button>
+    </div>
+    <div id="historyList"></div>
+    <div class="modal-actions">
+      <button class="btn" id="historyClose">Close</button>
     </div>
   </div>
 </div>
@@ -568,6 +619,7 @@
 
   async function sendRequest() {
     var req = collectRequest();
+    var state = collectState();
     if (!req.url) { alert('Please enter a URL'); return; }
     if (!/^https?:\/\//i.test(req.url)) {
       req.url = 'https://' + req.url;
@@ -602,6 +654,7 @@
         showError(data.error, elapsed);
       } else {
         showResponse(data, elapsed);
+        saveHistory(state);
       }
     } catch (err) {
       showError('Proxy error: ' + err.message, null);
@@ -615,6 +668,8 @@
     $('respStatus').style.display = 'flex';
     $('respTabs').style.display = 'flex';
     $('rtab-body').style.display = 'flex';
+    $('btnCopyResp').style.display = '';
+    lastRawBody = data.body;
 
     var badge = $('statusBadge');
     var status = data.status;
@@ -665,6 +720,8 @@
 
   function showError(msg, elapsed) {
     $('respStatus').style.display = 'flex';
+    $('btnCopyResp').style.display = '';
+    lastRawBody = msg;
     var badge = $('statusBadge');
     badge.textContent = 'Error';
     badge.className = 'status-badge err';
@@ -691,6 +748,7 @@
 
   // ===== JSON Tree view =====
   var lastParsedResponse = null;
+  var lastRawBody = '';
   var treeExpanded = new Set();
 
   function typeOf(v) {
@@ -941,8 +999,225 @@
     }
   }
 
+  // ===== Request history =====
+  var HISTORY_KEY = 'weutil.http.history.v1';
+  var HISTORY_MAX = 100;
+
+  // Collect full editable form state (headers/auth kept separate so the UI can be restored exactly)
+  function collectState() {
+    var headerRows = [];
+    headersList.querySelectorAll('.kv-row').forEach(function (row) {
+      var k = row.querySelector('.k').value.trim();
+      var v = row.querySelector('.v').value;
+      if (k) headerRows.push({ k: k, v: v });
+    });
+    var formRows = [];
+    formList.querySelectorAll('.kv-row').forEach(function (row) {
+      var k = row.querySelector('.k').value.trim();
+      var v = row.querySelector('.v').value;
+      if (k) formRows.push({ k: k, v: v });
+    });
+    var bodyType = document.querySelector('input[name="bodyType"]:checked').value;
+    var authType = document.querySelector('input[name="authType"]:checked').value;
+    var auth = {};
+    if (authType === 'bearer') auth.token = $('bearerToken').value;
+    else if (authType === 'basic') { auth.user = $('basicUser').value; auth.pass = $('basicPass').value; }
+    return {
+      method: $('method').value,
+      url: $('url').value.trim(),
+      headerRows: headerRows,
+      formRows: formRows,
+      bodyType: bodyType,
+      bodyText: (bodyType === 'json' || bodyType === 'text') ? $('bodyInput').value : '',
+      authType: authType,
+      auth: auth
+    };
+  }
+
+  // Restore a saved state back into the form
+  function applyState(s) {
+    $('method').value = s.method;
+    $('url').value = s.url;
+    headersList.innerHTML = '';
+    (s.headerRows || []).forEach(function (r) { createKvRow(r.k, r.v, headersList); });
+    if (!headersList.children.length) createKvRow('', '', headersList);
+    formList.innerHTML = '';
+    (s.formRows || []).forEach(function (r) { createKvRow(r.k, r.v, formList); });
+
+    var bt = s.bodyType || 'none';
+    document.querySelector('input[name="bodyType"][value="' + bt + '"]').checked = true;
+    $('bodyInput').style.display = (bt === 'json' || bt === 'text') ? 'block' : 'none';
+    $('formBody').style.display = (bt === 'form') ? 'flex' : 'none';
+    $('bodyInput').placeholder = bt === 'json' ? '{\n  "key": "value"\n}' : 'Raw body text...';
+    $('bodyHint').textContent = bt === 'json' ? 'Content-Type: application/json will be set automatically'
+      : bt === 'form' ? 'Content-Type: application/x-www-form-urlencoded will be set automatically' : '';
+    if (bt === 'json' || bt === 'text') $('bodyInput').value = s.bodyText || '';
+
+    var at = s.authType || 'none';
+    document.querySelector('input[name="authType"][value="' + at + '"]').checked = true;
+    $('bearerFields').style.display = (at === 'bearer') ? 'block' : 'none';
+    $('basicFields').style.display = (at === 'basic') ? 'block' : 'none';
+    if (at === 'bearer') $('bearerToken').value = (s.auth && s.auth.token) || '';
+    else if (at === 'basic') {
+      $('basicUser').value = (s.auth && s.auth.user) || '';
+      $('basicPass').value = (s.auth && s.auth.pass) || '';
+    }
+  }
+
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+    catch (e) { return []; }
+  }
+  function setHistory(list) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); }
+    catch (e) { /* storage quota exceeded: keep existing history */ }
+  }
+  function fingerprintOf(s) {
+    var src = JSON.stringify([s.method, s.url, s.headerRows, s.bodyType, s.bodyText, s.formRows]);
+    var h = 0;
+    for (var i = 0; i < src.length; i++) { h = ((h << 5) - h + src.charCodeAt(i)) | 0; }
+    return String(h);
+  }
+
+  function saveHistory(s) {
+    if (!s || !s.url) return;
+    var list = getHistory();
+    var fp = fingerprintOf(s);
+    var now = Date.now();
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].fp === fp) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      var rec = list[idx];
+      rec.ts = now; rec.count = (rec.count || 1) + 1;
+      list.splice(idx, 1); list.unshift(rec);
+    } else {
+      list.unshift({
+        id: now.toString(36) + Math.random().toString(36).slice(2, 6),
+        method: s.method, url: s.url, headerRows: s.headerRows,
+        bodyType: s.bodyType, bodyText: s.bodyText, formRows: s.formRows,
+        authType: s.authType, auth: s.auth, fp: fp, ts: now, count: 1
+      });
+      if (list.length > HISTORY_MAX) list.length = HISTORY_MAX;
+    }
+    setHistory(list);
+    renderHistoryBadge();
+  }
+
+  function deleteHistory(id) {
+    setHistory(getHistory().filter(function (r) { return r.id !== id; }));
+    renderHistoryList();
+    renderHistoryBadge();
+  }
+
+  function loadHistory(id) {
+    var list = getHistory();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) { applyState(list[i]); break; }
+    }
+    $('historyModal').classList.remove('show');
+  }
+
+  function timeAgo(ts) {
+    var diff = Date.now() - ts;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    if (diff < 2592000000) return Math.floor(diff / 86400000) + 'd ago';
+    return new Date(ts).toLocaleDateString();
+  }
+
+  function renderHistoryBadge() {
+    var n = getHistory().length;
+    $('histCount').textContent = n ? ' (' + n + ')' : '';
+  }
+
+  // Prefill the form with the most recent request on load
+  function loadMostRecent() {
+    var list = getHistory();
+    if (list.length) applyState(list[0]);
+  }
+
+  function copyToClipboard(text, btn) {
+    function flash(ok) {
+      var svg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+      btn.innerHTML = ok ? '✓' : '✕';
+      btn.classList.remove('copied', 'failed');
+      btn.classList.add(ok ? 'copied' : 'failed');
+      setTimeout(function () { btn.innerHTML = svg; btn.classList.remove('copied', 'failed'); }, 1200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flash(true); }).catch(function () { flash(false); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      flash(ok);
+    }
+  }
+
+  $('btnCopyResp').addEventListener('click', function () {
+    if (!lastRawBody && lastRawBody !== '') return;
+    var text = lastParsedResponse !== null ? JSON.stringify(lastParsedResponse, null, 2) : lastRawBody;
+    copyToClipboard(text, $('btnCopyResp'));
+  });
+
+  function renderHistoryList() {
+    var list = getHistory();
+    var box = $('historyList');
+    box.innerHTML = '';
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-state" style="padding:40px 0"><div><div class="icon">🕘</div><div>No history yet. Sent requests will appear here.</div></div></div>';
+      $('historyClear').style.display = 'none';
+      return;
+    }
+    $('historyClear').style.display = '';
+    list.forEach(function (rec) {
+      var row = document.createElement('div');
+      row.className = 'history-row';
+      var badgeCls = 'm-' + rec.method.toLowerCase();
+      row.innerHTML =
+        '<span class="method-badge ' + badgeCls + '">' + esc(rec.method) + '</span>' +
+        '<span class="hist-url" title="' + esc(rec.url) + '">' + esc(rec.url) + '</span>' +
+        (rec.count > 1 ? '<span class="hist-count">×' + rec.count + '</span>' : '') +
+        '<span class="hist-time">' + timeAgo(rec.ts) + '</span>' +
+        '<button class="kv-del hist-del" title="Delete">×</button>';
+      row.querySelector('.hist-del').addEventListener('click', function (e) {
+        e.stopPropagation();
+        deleteHistory(rec.id);
+      });
+      row.addEventListener('click', function () { loadHistory(rec.id); });
+      box.appendChild(row);
+    });
+  }
+
+  var historyModal = $('historyModal');
+  $('btnHistory').addEventListener('click', function () {
+    renderHistoryList();
+    historyModal.classList.add('show');
+  });
+  $('historyClose').addEventListener('click', function () { historyModal.classList.remove('show'); });
+  historyModal.addEventListener('click', function (e) { if (e.target === historyModal) historyModal.classList.remove('show'); });
+  $('historyClear').addEventListener('click', function () {
+    if (!confirm('Clear all request history?')) return;
+    setHistory([]);
+    renderHistoryList();
+    renderHistoryBadge();
+  });
+  renderHistoryBadge();
+
   // ===== Sample request =====
   $('url').value = 'https://jsonplaceholder.typicode.com/posts/1';
+
+  // Default to the most recent request if history exists
+  loadMostRecent();
 })();
 </script>
 </body>
