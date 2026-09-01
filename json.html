@@ -805,8 +805,8 @@
     <section class="panel" aria-label="JSON output">
       <div class="panel-head">
         <div class="tabs" role="tablist">
-          <button class="tab active" data-view="tree" role="tab">Tree</button>
-          <button class="tab" data-view="text" role="tab">Formatted</button>
+          <button class="tab active" data-view="text" role="tab">Formatted</button>
+          <button class="tab" data-view="tree" role="tab">Tree</button>
           <button class="tab" data-view="diff" role="tab">Diff</button>
         </div>
         <div class="spacer"></div>
@@ -893,7 +893,7 @@
     error: null,
     errPos: null,
     formatted: '',
-    view: 'tree',
+    view: 'text',
     expanded: new Set(['[]']),
     search: '',
     matches: [],
@@ -1436,7 +1436,7 @@
   function doSample() {
     inputEl.value = JSON.stringify(SAMPLE, null, 2);
     doFormat();
-    setView('tree');
+    setView('text');
   }
 
   function expandAll() {
@@ -1834,7 +1834,7 @@
   });
 
   /* ===================== Init ===================== */
-  setView('tree');
+  setView('text');
   doSample();
 })();
 </script>

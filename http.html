@@ -442,8 +442,8 @@
         </div>
         <div class="tab-content active" id="rtab-body" style="display:none;">
           <div class="resp-subtabs" id="respSubtabs" style="display:none;">
-            <button class="subtab active" data-view="tree">Tree</button>
-            <button class="subtab" data-view="formatted">Formatted</button>
+            <button class="subtab active" data-view="formatted">Formatted</button>
+            <button class="subtab" data-view="tree">Tree</button>
           </div>
           <div class="resp-body tree-view" id="respTree"></div>
           <div class="resp-body" id="respFormatted" style="display:none;"></div>
@@ -689,10 +689,10 @@
         $('respTree').innerHTML = renderTreeFromParsed(lastParsedResponse, true);
         $('respFormatted').innerHTML = syntaxHighlight(JSON.stringify(lastParsedResponse, null, 2));
         $('respSubtabs').style.display = 'flex';
-        $('respTree').style.display = '';
-        $('respFormatted').style.display = 'none';
+        $('respTree').style.display = 'none';
+        $('respFormatted').style.display = '';
         document.querySelectorAll('.subtab').forEach(function (t) { t.classList.remove('active'); });
-        document.querySelector('.subtab[data-view="tree"]').classList.add('active');
+        document.querySelector('.subtab[data-view="formatted"]').classList.add('active');
       } catch {
         lastParsedResponse = null;
         $('respTree').textContent = data.body;
