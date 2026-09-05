@@ -542,6 +542,8 @@
   .tok-null { color: var(--tok-null); font-style: italic; }
   .tok-key { color: var(--tok-key); }
   .tok-punct { color: var(--tok-punct); }
+  .tok-string.unpackable { text-decoration: underline dotted; cursor: pointer; }
+  .tok-string.unpackable:hover { color: var(--tok-str); text-decoration-color: var(--accent); }
 
   /* ===================== Diff view ===================== */
   .diff-view { padding: 0; display: flex; flex-direction: column; }
@@ -1356,10 +1358,45 @@
 
   function renderText(text) {
     state.formatted = text;
+    if (state.parsed !== undefined) {
+      codeEl.innerHTML = renderFormattedValue(state.parsed, [], 0);
+      return;
+    }
     var lines = text.split('\n');
     codeEl.innerHTML = lines.map(function (ln, idx) {
       return '<span class="line" data-line="' + (idx + 1) + '">' + highlightJSON(ln) + '</span>';
     }).join('\n');
+  }
+
+  function renderFormattedValue(v, path, depth) {
+    function pad(d) { return new Array(d + 1).join('  '); }
+    var t = typeOf(v);
+    if (t === 'object') {
+      var keys = Object.keys(v);
+      if (!keys.length) return '<span class="tok-punct">{}</span>';
+      var inner = keys.map(function (k) {
+        return pad(depth + 1) + '<span class="tok-key">' + esc(JSON.stringify(k)) + '</span><span class="tok-punct">:</span> ' +
+          renderFormattedValue(v[k], path.concat(k), depth + 1);
+      }).join('<span class="tok-punct">,</span>\n');
+      return '<span class="tok-punct">{</span>\n' + inner + '\n' + pad(depth) + '<span class="tok-punct">}</span>';
+    }
+    if (t === 'array') {
+      if (!v.length) return '<span class="tok-punct">[]</span>';
+      var inner2 = v.map(function (item, i) {
+        return pad(depth + 1) + renderFormattedValue(item, path.concat(i), depth + 1);
+      }).join('<span class="tok-punct">,</span>\n');
+      return '<span class="tok-punct">[</span>\n' + inner2 + '\n' + pad(depth) + '<span class="tok-punct">]</span>';
+    }
+    if (t === 'string') {
+      var s = esc(JSON.stringify(v));
+      if (isNestedJsonString(v)) {
+        return '<span class="tok-string unpackable" data-unpack="' + esc(JSON.stringify(path)) + '" title="Click to parse as JSON">' + s + '</span>';
+      }
+      return '<span class="tok-string">' + s + '</span>';
+    }
+    if (t === 'number') return '<span class="tok-number">' + v + '</span>';
+    if (t === 'boolean') return '<span class="tok-bool">' + v + '</span>';
+    return '<span class="tok-null">null</span>';
   }
 
   /* ===================== View switching ===================== */
@@ -1544,6 +1581,13 @@
       togglePath(pkey);
       showInspector(JSON.parse(pkey));
     }
+  });
+
+  codeEl.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-unpack]');
+    if (!t) return;
+    var p = JSON.parse(t.getAttribute('data-unpack'));
+    openUnpackModal(p, getValueAt(p));
   });
 
   /* ===================== Nested JSON preview ===================== */
