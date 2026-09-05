@@ -1735,6 +1735,17 @@
       }
       return { type: hasDiff2 ? 'changed' : 'equal', path: path, kind: 'array', children: children2 };
     }
+    if (ta === 'string' && tb === 'string') {
+      if (isNestedJsonString(a) && isNestedJsonString(b)) {
+        var pa = JSON.parse(a), pb = JSON.parse(b);
+        var inner = diffValues(pa, pb, path);
+        if (inner.type === 'equal') return { type: 'equal', path: path, kind: 'primitive', value: a };
+        return { type: 'changed', path: path, kind: 'nested-string', inner: inner,
+                 children: inner.children || [inner], old: a, new: b };
+      }
+      if (a === b) return { type: 'equal', path: path, kind: 'primitive', value: a };
+      return { type: 'changed', path: path, kind: 'primitive', old: a, new: b };
+    }
     if (a === b) return { type: 'equal', path: path, kind: 'primitive', value: a };
     return { type: 'changed', path: path, kind: 'primitive', old: a, new: b };
   }
@@ -1787,6 +1798,26 @@
         (isRoot ? '<span class="key" style="color:var(--accent);font-weight:700">$</span>' : diffKeyLabel(key)) +
         '<span class="sep">:</span>' + badge + preview +
         '</div>' + kids;
+    }
+
+    if (node.kind === 'nested-string') {
+      var open2 = state.diffExpanded.has(pkey);
+      var innerKids = node.children || [];
+      var visible2 = innerKids;
+      if (state.diffOnly) {
+        visible2 = innerKids.filter(function (c) { return c.type !== 'equal'; });
+      }
+      var oldStr = typeof node.old === 'string' ? node.old : '';
+      var previewStr = oldStr.length > 42 ? oldStr.slice(0, 42) + '…' : oldStr;
+      var preview2 = open2 ? '' : '<span class="preview">' + esc(previewStr) + '</span>';
+      var kids2 = open2 ? '<div class="dchildren">' + visible2.map(function (c) { return renderDiffNode(c, false); }).join('') + '</div>' : '';
+      var cls2 = 'drow container diff-' + status;
+      return '<div class="' + cls2 + '" data-path="' + esc(pkey) + '">' +
+        '<span class="caret-wrap"><button class="caret' + (open2 ? ' open' : '') + '" data-diff-act="toggle" data-path="' + esc(pkey) + '" aria-expanded="' + open2 + '">' + CARET + '</button></span>' +
+        '<span class="diff-mark">' + markSym + '</span>' +
+        (isRoot ? '<span class="key" style="color:var(--accent);font-weight:700">$</span>' : diffKeyLabel(key)) +
+        '<span class="sep">:</span><span class="chip chip-object">nested JSON</span>' + preview2 +
+        '</div>' + kids2;
     }
 
     // primitive / typechange
@@ -1849,7 +1880,7 @@
     // Default expand: root + all changed containers
     var expanded = new Set(['[]']);
     (function collectChanged(n) {
-      if (n.type === 'changed' && (n.kind === 'object' || n.kind === 'array')) {
+      if (n.type === 'changed' && (n.kind === 'object' || n.kind === 'array' || n.kind === 'nested-string')) {
         expanded.add(pathKey(n.path));
       }
       if (n.children) n.children.forEach(collectChanged);
