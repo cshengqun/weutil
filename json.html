@@ -1425,6 +1425,7 @@
     if (pretty !== undefined) renderText(pretty);
     refreshStats();
     hideErr();
+    saveInput();
   }
 
   function doFormat() {
@@ -1989,9 +1990,32 @@
     refreshStats();
   });
 
+  /* ===================== Recent input ===================== */
+  var STORAGE_KEY = 'weutil.json.input.v1';
+  function saveInput() {
+    try {
+      var v = inputEl.value;
+      if (v && v.length <= 1000000) localStorage.setItem(STORAGE_KEY, v);
+    } catch (e) {}
+  }
+  function loadRecent() {
+    var saved = null;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!saved || !saved.trim()) { doSample(); return; }
+    inputEl.value = saved;
+    var r = parseInput();
+    if (r.ok && !r.empty) {
+      afterParse(JSON.stringify(r.value, null, 2));
+      setView('text');
+      setStatus('ok', 'Restored last input');
+    } else {
+      doSample();
+    }
+  }
+
   /* ===================== Init ===================== */
   setView('text');
-  doSample();
+  loadRecent();
 })();
 </script>
 
