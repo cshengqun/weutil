@@ -26,6 +26,14 @@ Free online developer toolbox. Works in the browser, no install needed.
 - Custom timezone output (all IANA timezones)
 - Light/dark theme toggle
 
+### QR Code Studio
+- QR codes for links/text, WiFi, vCard, email, phone and SMS
+- Custom foreground/background colors, transparent background
+- Optional center logo (auto-switches to error-correction level H)
+- Adjustable size and quiet zone
+- Download as PNG or SVG, copy PNG to clipboard
+- Light/dark theme toggle
+
 ## Live Site
 
 🔗 https://weutil.top
@@ -47,8 +55,11 @@ Push to `main` branch → Vercel auto-deploys to https://weutil.top
 ## Project Structure
 
 ```
-├── index.html      # JSON Lab (main page)
+├── index.html      # Home / tool directory
+├── json.html       # JSON Lab
 ├── timestamp.html  # Epoch Lab (timestamp converter)
+├── http.html       # HTTP Client
+├── qrcode.html     # QR Code Studio
 ├── README.md
 └── .gitignore
 ```
