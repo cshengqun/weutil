@@ -153,7 +153,20 @@ async function youtubeTrending() {
   }));
 }
 
-// ---------- Source 8: X / Twitter Worldwide trends (trends24.in) ----------
+// ---------- Source 9: Google Trends Trending Now (US) ----------
+async function googleTrendsUS() {
+  const html = await fetchText('https://trends.google.com/trending?geo=US&hl=en', { timeout: 10000 });
+  // Trend titles: <div class="mZ3RIc">WORD</div>
+  // Search volume: <div class="qNpYPd">1M+ searches</div>
+  const titles = [...html.matchAll(/class="mZ3RIc">([^<]+)<\/div>/g)].map(m => m[1].trim());
+  const volumes = [...html.matchAll(/class="qNpYPd">([^<]+)<\/div>/g)].map(m => m[1].trim());
+  return titles.slice(0, 20).map((title, i) => ({
+    title,
+    url: 'https://trends.google.com/trending?geo=US',
+    score: volumes[i] || '',
+    sub: 'Google Trends US',
+  }));
+}
 async function xTrends() {
   const html = await fetchText('https://trends24.in/', { timeout: 10000 });
   // Each trend is: <a href="https://twitter.com/search?q=..." class=trend-link>WORD</a>
@@ -185,6 +198,7 @@ const SOURCES = [
   { id: 'ph', name: 'Product Hunt', icon: '🏹', fetch: productHunt },
   { id: 'youtube', name: 'YouTube Trending (US)', icon: '▶️', fetch: youtubeTrending },
   { id: 'x', name: 'X / Twitter Worldwide', icon: '𝕏', fetch: xTrends },
+  { id: 'gtrends', name: 'Google Trends (US)', icon: '🔍', fetch: googleTrendsUS },
 ];
 
 export default async function handler(req, res) {
