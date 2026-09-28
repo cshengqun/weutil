@@ -107,7 +107,7 @@ footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
 <main class="wrap">
   <section class="hero">
     <h1>Trend <span class="grad">Radar</span></h1>
-    <p>Daily signals for one-person companies: what builders, developers and indie hackers are paying attention to right now. Aggregated from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Google Trends, Weibo, Baidu, X, TikTok and Reddit. Refreshed daily.</p>
+    <p>Daily signals for one-person companies: what builders, developers and people worldwide are searching for right now. Aggregated from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Product Hunt, YouTube Trending, Google Trends (US/UK/India), X and Weibo. Refreshed daily.</p>
     <div class="meta-row">
       <span class="chip live" id="updated">loading…</span>
       <span class="chip">multi-source</span>
@@ -203,9 +203,9 @@ render = function(data){ lastData = data; origRender(data); };
 
 // Mapping for the daily snapshot JSON (trends-data/YYYY-MM-DD.json)
 const SNAPSHOT_META = {
-  google_trends_cn:   {icon:'🇨🇳', name:'Google Trends (China)', url:'https://trends.google.com/trending?geo=CN'},
   google_trends_us:   {icon:'🇺🇸', name:'Google Trends (US)', url:'https://trends.google.com/trending?geo=US'},
-  google_trends_global:{icon:'🌍', name:'Google Trends (Global)', url:'https://trends.google.com/trending?geo='},
+  google_trends_gb:   {icon:'🇬🇧', name:'Google Trends (UK)', url:'https://trends.google.com/trending?geo=GB'},
+  google_trends_in:   {icon:'🇮🇳', name:'Google Trends (India)', url:'https://trends.google.com/trending?geo=IN'},
   twitter_trends:     {icon:'𝕏', name:'X / Twitter Trends', url:'https://trends24.in/'},
   weibo_hot:          {icon:'🔥', name:'Weibo Hot Search', url:'https://s.weibo.com/top/summary'},
 };
