@@ -67,6 +67,10 @@ button.refresh:hover{background:var(--bg-4)}
 .list .sub{font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .list .score{display:inline-block;color:var(--accent);font-size:11.5px;font-weight:600;margin-right:6px}
 .empty{padding:20px;color:var(--muted);font-size:13px;text-align:center}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 0;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.pager button{background:var(--bg-3);border:1px solid var(--border-2);color:var(--text);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.pager button:disabled{opacity:0.4;cursor:not-allowed}
+.pager button:not(:disabled):hover{background:var(--bg-4)}
 
 footer{border-top:1px solid var(--border);padding:20px 0;color:var(--muted);font-size:13px;text-align:center}
 footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
@@ -127,9 +131,47 @@ footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
 <script>
 const grid = document.getElementById('grid');
 const updatedEl = document.getElementById('updated');
+const PAGE_SIZE = 10;
+const pageState = {}; // sourceId -> currentPage
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function dec(s){const d=document.createElement('textarea');d.innerHTML=s==null?'':String(s);return d.value;}
+
+function renderCard(src, idx){
+  const all = src.items || [];
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const sid = src.id || ('src_'+idx);
+  if(!(sid in pageState)) pageState[sid] = 1;
+  let p = pageState[sid];
+  if(p > totalPages) p = pageState[sid] = totalPages;
+  const start = (p-1)*PAGE_SIZE;
+  const pageItems = all.slice(start, start+PAGE_SIZE);
+
+  const itemsHtml = pageItems.map(it => {
+    const score = it.score ? `<span class="score">▲ ${esc(it.score)}</span>` : '';
+    const sub = it.sub ? `<div class="sub">${esc(dec(it.sub))}</div>` : '';
+    return `<li><a class="title" href="${esc(it.url)}" target="_blank" rel="noopener">${score}${esc(it.title)}</a>${sub}</li>`;
+  }).join('');
+
+  const body = total
+    ? `<ul class="list">${itemsHtml}</ul>`
+    : `<div class="empty">${src.ok ? 'No items.' : 'Source unavailable right now.'}</div>`;
+
+  let pager = '';
+  if(total > PAGE_SIZE){
+    pager = `<div class="pager">
+      <button ${p<=1?'disabled':''} data-sid="${sid}" data-dir="-1">‹ Prev</button>
+      <span>${p} / ${totalPages}</span>
+      <button ${p>=totalPages?'disabled':''} data-sid="${sid}" data-dir="1">Next ›</button>
+    </div>`;
+  }
+
+  return `<div class="card" data-sid="${sid}">
+    <h2><span>${src.icon||''}</span> ${esc(src.name)} <span class="cnt">${total} items</span></h2>
+    ${body}${pager}
+  </div>`;
+}
 
 function render(data){
   updatedEl.textContent = 'Updated ' + (data.generatedAtLocal || new Date(data.generatedAt).toLocaleString());
@@ -137,30 +179,35 @@ function render(data){
     grid.innerHTML = '<div class="card"><div class="empty">No data.</div></div>';
     return;
   }
-  grid.innerHTML = data.sources.map(src => {
-    const items = (src.items||[]).map(it => {
-      const score = it.score ? `<span class="score">▲ ${it.score}</span>` : '';
-      const sub = it.sub ? `<div class="sub">${esc(dec(it.sub))}</div>` : '';
-      return `<li><a class="title" href="${esc(it.url)}" target="_blank" rel="noopener">${score}${esc(it.title)}</a>${sub}</li>`;
-    }).join('');
-    const body = items
-      ? `<ul class="list">${items}</ul>`
-      : `<div class="empty">${src.ok ? 'No items.' : 'Source unavailable right now.'}</div>`;
-    return `<div class="card">
-      <h2><span>${src.icon||''}</span> ${esc(src.name)} <span class="cnt">${(src.items||[]).length} items</span></h2>
-      ${body}
-    </div>`;
-  }).join('');
+  grid.innerHTML = data.sources.map((src,i) => renderCard(src,i)).join('');
+
+  // pager clicks
+  grid.querySelectorAll('.pager button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sid = btn.dataset.sid;
+      const dir = parseInt(btn.dataset.dir,10);
+      if(!(sid in pageState)) pageState[sid] = 1;
+      pageState[sid] += dir;
+      // re-render just this card: find source data and re-render
+      const idx = parseInt(grid.querySelector(`.card[data-sid="${CSS.escape(sid)}"]`).dataset.idx || '0', 10);
+      // simpler: re-render whole grid from cached data
+      render(data);
+    });
+  });
 }
+
+// Cache latest data for pager re-renders
+let lastData = null;
+const origRender = render;
+render = function(data){ lastData = data; origRender(data); };
 
 // Mapping for the daily snapshot JSON (trends-data/YYYY-MM-DD.json)
 const SNAPSHOT_META = {
-  google_trends_us:   {icon:'🔍', name:'Google Trends (US)', url:'https://trends.google.com/trending?geo=US'},
-  reddit_ih:          {icon:'👽', name:'Reddit r/indiehackers', url:'https://www.reddit.com/r/indiehackers/top/?t=week'},
+  google_trends_cn:   {icon:'🇨🇳', name:'Google Trends (China)', url:'https://trends.google.com/trending?geo=CN'},
+  google_trends_us:   {icon:'🇺🇸', name:'Google Trends (US)', url:'https://trends.google.com/trending?geo=US'},
+  google_trends_global:{icon:'🌍', name:'Google Trends (Global)', url:'https://trends.google.com/trending?geo='},
   twitter_trends:     {icon:'𝕏', name:'X / Twitter Trends', url:'https://trends24.in/'},
-  tiktok_hashtag_us:  {icon:'🎵', name:'TikTok Hashtag (US, 7d)', url:'https://ads.tiktok.com/business/creativecenter/trends/hashtag/pc/en'},
   weibo_hot:          {icon:'🔥', name:'Weibo Hot Search', url:'https://s.weibo.com/top/summary'},
-  baidu_hot:          {icon:'🔴', name:'Baidu Hot Search', url:'https://top.baidu.com/board?tab=realtime'},
 };
 
 function snapshotToCards(snap){
@@ -169,17 +216,14 @@ function snapshotToCards(snap){
     const meta = SNAPSHOT_META[key] || {icon:'📌', name:key, url:'#'};
     const items = (arr||[]).map(it => {
       let title, score, sub, url = meta.url;
-      if(key === 'google_trends_us'){ title=it.keyword; score=it.search_volume; sub=it.started_ago; }
+      if(key.startsWith('google_trends')){ title=it.keyword; score=it.search_volume||''; sub=it.started_ago||''; }
       else if(key === 'twitter_trends'){ title='#'+it.keyword.replace(/^#/,''); score='#'+it.rank; sub=''; }
-      else if(key === 'tiktok_hashtag_us'){ title=it.hashtag; score=it.views; sub=it.posts+' posts'; }
       else if(key === 'weibo_hot'){ title=it.keyword; score=it.search_volume; sub=it.tag||''; }
-      else if(key === 'baidu_hot'){ title=it.keyword; score=it.index; sub=it.tag||''; }
-      else if(key === 'reddit_ih'){ title=it.title; score=it.score; sub=it.num_comments+' comments'; url=it.url||meta.url; }
       else { title=it.title||it.keyword; score=it.score||''; sub=it.sub||''; }
       return {title, score, sub, url};
     });
-    return {icon:meta.icon, name:meta.name, ok:true, items};
-  });
+    return {id:key, icon:meta.icon, name:meta.name, ok:true, items};
+  }).filter(c => SNAPSHOT_META[c.id]); // only keep sources we still want
 }
 
 async function loadSnapshot(){
