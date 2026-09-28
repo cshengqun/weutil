@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trend Radar - Daily signals for one-person companies | WeUtil</title>
+<meta name="description" content="Daily trend radar aggregating GitHub Trending, Hacker News, Lobsters, Hugging Face and arXiv cs.AI. Built for one-person companies and indie hackers.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="canonical" href="https://weutil.top/trends">
+<script>
+  (function(){try{var t=localStorage.getItem('weutil-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<style>
+:root{
+  --bg:#0b1020; --bg-2:#101731; --bg-3:#17203f; --bg-4:#202b50;
+  --border:#263056; --border-2:#33406b;
+  --text:#e9edf7; --muted:#9aa6c2;
+  --accent:#e8a25c; --accent-hi:#f6c28a; --accent-ink:#201403;
+  --good:#7cc78b; --bad:#e07a7a;
+}
+[data-theme="light"]{
+  --bg:#f2f5fb; --bg-2:#ffffff; --bg-3:#edf1f9; --bg-4:#e3e9f5;
+  --border:#d8dfec; --border-2:#c3cde0;
+  --text:#1c2334; --muted:#5a6580;
+  --accent:#c67d34; --accent-hi:#a9641f; --accent-ink:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+
+header.site{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.nav{display:flex;align-items:center;gap:16px;height:56px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700}
+.brand .logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent-hi));display:inline-flex;align-items:center;justify-content:center;color:var(--accent-ink);font-size:13px;font-weight:800}
+.brand .name b{color:var(--accent)}
+.brand .name span{color:var(--muted);font-weight:400;font-size:13px;margin-left:4px}
+.toolnav{display:flex;gap:4px;margin-left:10px;flex-wrap:wrap}
+.toolnav a{padding:6px 10px;border-radius:8px;color:var(--muted);font-size:14px;border:1px solid transparent}
+.toolnav a:hover{background:var(--bg-3);color:var(--text)}
+.toolnav a.active{background:var(--bg-3);color:var(--accent);font-weight:600}
+.spacer{flex:1}
+.theme-btn{background:var(--bg-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
+
+.hero{padding:36px 0 20px}
+.hero h1{font-size:30px;margin:0 0 8px;letter-spacing:-0.02em}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent),var(--accent-hi));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);margin:0;max-width:720px}
+.meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.chip{background:var(--bg-2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:99px;font-size:12px}
+.chip.live{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+button.refresh{background:var(--bg-3);border:1px solid var(--border-2);color:var(--text);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+button.refresh:hover{background:var(--bg-4)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;padding:20px 0 40px}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card h2{margin:0;padding:14px 18px;border-bottom:1px solid var(--border);font-size:15px;display:flex;align-items:center;gap:8px}
+.card h2 .cnt{margin-left:auto;color:var(--muted);font-weight:400;font-size:12px}
+.list{list-style:none;margin:0;padding:6px 0;flex:1}
+.list li{padding:9px 18px;border-bottom:1px solid var(--border)}
+.list li:last-child{border-bottom:none}
+.list a.title{display:block;font-size:13.5px;line-height:1.45;color:var(--text)}
+.list a.title:hover{color:var(--accent)}
+.list .sub{font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.list .score{display:inline-block;color:var(--accent);font-size:11.5px;font-weight:600;margin-right:6px}
+.empty{padding:20px;color:var(--muted);font-size:13px;text-align:center}
+
+footer{border-top:1px solid var(--border);padding:20px 0;color:var(--muted);font-size:13px;text-align:center}
+footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
+
+@media(max-width:640px){
+  .toolnav{display:none}
+  .hero h1{font-size:24px}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <span class="logo">W</span>
+      <span class="name">WeUtil <span>Builder Toolbox</span></span>
+    </a>
+    <nav class="toolnav">
+      <a href="/">Home</a>
+      <a href="/json">JSON Lab</a>
+      <a href="/timestamp">Epoch Lab</a>
+      <a href="/http">HTTP Client</a>
+      <a href="/qrcode">QR Code</a>
+      <a href="/trends" class="active">Trends</a>
+      <a href="/feedback">Feedback</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="theme-btn" id="theme-toggle" title="Toggle theme">🌓</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Trend <span class="grad">Radar</span></h1>
+    <p>Daily signals for one-person companies: what builders, developers and indie hackers are paying attention to right now. Aggregated from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Google Trends, Weibo, Baidu, X, TikTok and Reddit. Refreshed daily.</p>
+    <div class="meta-row">
+      <span class="chip live" id="updated">loading…</span>
+      <span class="chip">multi-source</span>
+      <span class="chip">cached 24h</span>
+      <button class="refresh" id="refresh-btn">Refresh now</button>
+    </div>
+  </section>
+
+  <section class="grid" id="grid">
+    <div class="card"><h2>Loading…</h2><div class="empty">Fetching today's signals, one moment.</div></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="/json">JSON Lab</a> · <a href="/timestamp">Epoch Lab</a> · <a href="/http">HTTP Client</a> · <a href="/qrcode">QR Code</a> · <a href="/trends">Trend Radar</a><br>
+    © 2026 WeUtil · Free online tools for builders · <a href="https://weutil.top/">weutil.top</a>
+  </div>
+</footer>
+
+<script>
+const grid = document.getElementById('grid');
+const updatedEl = document.getElementById('updated');
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function dec(s){const d=document.createElement('textarea');d.innerHTML=s==null?'':String(s);return d.value;}
+
+function render(data){
+  updatedEl.textContent = 'Updated ' + (data.generatedAtLocal || new Date(data.generatedAt).toLocaleString());
+  if(!data.sources || !data.sources.length){
+    grid.innerHTML = '<div class="card"><div class="empty">No data.</div></div>';
+    return;
+  }
+  grid.innerHTML = data.sources.map(src => {
+    const items = (src.items||[]).map(it => {
+      const score = it.score ? `<span class="score">▲ ${it.score}</span>` : '';
+      const sub = it.sub ? `<div class="sub">${esc(dec(it.sub))}</div>` : '';
+      return `<li><a class="title" href="${esc(it.url)}" target="_blank" rel="noopener">${score}${esc(it.title)}</a>${sub}</li>`;
+    }).join('');
+    const body = items
+      ? `<ul class="list">${items}</ul>`
+      : `<div class="empty">${src.ok ? 'No items.' : 'Source unavailable right now.'}</div>`;
+    return `<div class="card">
+      <h2><span>${src.icon||''}</span> ${esc(src.name)} <span class="cnt">${(src.items||[]).length} items</span></h2>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+// Mapping for the daily snapshot JSON (trends-data/YYYY-MM-DD.json)
+const SNAPSHOT_META = {
+  google_trends_us:   {icon:'🔍', name:'Google Trends (US)', url:'https://trends.google.com/trending?geo=US'},
+  reddit_ih:          {icon:'👽', name:'Reddit r/indiehackers', url:'https://www.reddit.com/r/indiehackers/top/?t=week'},
+  twitter_trends:     {icon:'𝕏', name:'X / Twitter Trends', url:'https://trends24.in/'},
+  tiktok_hashtag_us:  {icon:'🎵', name:'TikTok Hashtag (US, 7d)', url:'https://ads.tiktok.com/business/creativecenter/trends/hashtag/pc/en'},
+  weibo_hot:          {icon:'🔥', name:'Weibo Hot Search', url:'https://s.weibo.com/top/summary'},
+  baidu_hot:          {icon:'🔴', name:'Baidu Hot Search', url:'https://top.baidu.com/board?tab=realtime'},
+};
+
+function snapshotToCards(snap){
+  if(!snap || !snap.sources) return [];
+  return Object.entries(snap.sources).map(([key, arr]) => {
+    const meta = SNAPSHOT_META[key] || {icon:'📌', name:key, url:'#'};
+    const items = (arr||[]).map(it => {
+      let title, score, sub, url = meta.url;
+      if(key === 'google_trends_us'){ title=it.keyword; score=it.search_volume; sub=it.started_ago; }
+      else if(key === 'twitter_trends'){ title='#'+it.keyword.replace(/^#/,''); score='#'+it.rank; sub=''; }
+      else if(key === 'tiktok_hashtag_us'){ title=it.hashtag; score=it.views; sub=it.posts+' posts'; }
+      else if(key === 'weibo_hot'){ title=it.keyword; score=it.search_volume; sub=it.tag||''; }
+      else if(key === 'baidu_hot'){ title=it.keyword; score=it.index; sub=it.tag||''; }
+      else if(key === 'reddit_ih'){ title=it.title; score=it.score; sub=it.num_comments+' comments'; url=it.url||meta.url; }
+      else { title=it.title||it.keyword; score=it.score||''; sub=it.sub||''; }
+      return {title, score, sub, url};
+    });
+    return {icon:meta.icon, name:meta.name, ok:true, items};
+  });
+}
+
+async function loadSnapshot(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const url = `/trends-data/${yyyy}-${mm}-${dd}.json`;
+  try{
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) return [];
+    const snap = await r.json();
+    return snapshotToCards(snap);
+  }catch(e){ return []; }
+}
+
+async function load(){
+  updatedEl.textContent = 'loading…';
+  try{
+    const [apiData, snapCards] = await Promise.all([
+      fetch('/api/trends', { cache: 'no-store' }).then(r=>r.json()).catch(()=>({sources:[]})),
+      loadSnapshot()
+    ]);
+    const mergedSources = [...(apiData.sources||[]), ...snapCards];
+    render({sources: mergedSources, generatedAt: apiData.generatedAt});
+  }catch(e){
+    updatedEl.textContent = 'failed to load';
+    grid.innerHTML = '<div class="card"><div class="empty">Could not reach the trend API. Try refreshing.</div></div>';
+  }
+}
+
+document.getElementById('refresh-btn').addEventListener('click', load);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{localStorage.setItem('weutil-theme', next);}catch(e){}
+});
+
+load();
+</script>
+</body>
+</html>

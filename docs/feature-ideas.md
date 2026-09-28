@@ -112,3 +112,94 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 
 - 内嵌第三方库（pdf-lib、js-yaml、qrcode）与项目"零依赖"原则的边界：建议统一采用"源码内嵌到单页、无 npm/构建"的方式保持架构一致。
 - Formspree 中的实际用户反馈内容（需登录 Formspree 后台查看），下一次探索前建议人工导出一次高频需求。
+
+---
+
+## 2026-09-28
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client（+api/proxy.js）、QR Code Studio、Feedback |
+| 已开发待推送 | **Trend Radar**（`trends.html` + `api/trends.js`）：聚合 GitHub Trending、Hacker News、Lobsters、Hugging Face、arXiv 五个源；`vercel.json` 已配每日 UTC 0:00（北京 8:00）cron 预热，API 带 24h CDN 缓存 |
+| 定位变更 | 站点定位从"泛 Builder 工具站"收窄为 **OPC（One Person Company，一人公司）工具站** |
+| 用户反馈 | feedback 走 Formspree，后台内容本次未读取 |
+
+历史 8 个建议中 #1 QR Code 已落地；#2-8（Image/Encoder/Generator/Regex/PDF/Converter/Cron）仍在候选池，本次不重复展开，只新增方向。
+
+### 二、新功能建议（6 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 9 | Favicon & App Icon Studio | 产品上线前生成全套图标 | 纯前端（Canvas + ICO 编码） | **高** |
+| 10 | OG Image Studio | 博客/产品社交分享图 | 纯前端（Canvas） | **高** |
+| 11 | Meta Tags Preview & Debugger | 上线前检查各平台分享卡片 | 需 api serverless 抓取 | **中高** |
+| 12 | Markdown Studio | 写 README / 博客 / 文档 | 纯前端（内嵌 MD 解析） | 中 |
+| 13 | UTM Link Builder | 渠道投放链接追踪 | 纯前端，与 QR Code 协同 | 中 |
+| 14 | Stripe Fee & MRR Calculator | 定价与收入测算 | 纯前端 | 中低 |
+
+#### 9. Favicon & App Icon Studio — 高
+- **场景**：indie hacker 产品上线前，一张 logo 要产出 favicon.ico、16/32 PNG、apple-touch-icon 180、PWA 192/512（含 maskable）、site.webmanifest，通常要开 3 个网站凑齐。
+- **核心能力**：上传/绘制单图 → 自动裁切缩放全套尺寸；emoji/文字作为图标源；ICO 多分辨率打包；ZIP 打包下载 + 复制 HTML 引入片段；PWA maskable 安全区预览。
+- **技术可行性**：纯前端 Canvas；ICO 格式手写编码器（BMP/PNG 条目，约 100 行）；ZIP 可用极简 store 打包或内嵌小型 zip 实现。
+- **参考产品**：favicon.run、favicon.io、Free Icon Generator（PH 2026）、LogoFast。
+- **理由**：2026 年该品类在 PH 和工具站密集上新，需求被反复验证；全部竞品都主打 client-side，与 WeUtil 栈完全一致；和 QR Code 同属"发产品前必做"的高意图场景，SEO 关键词明确。
+
+#### 10. OG Image Studio（社交分享图生成器）— 高
+- **场景**：发博客、上 PH、发推前需要 1200×630 分享图；不会设计、不想开 Figma。
+- **核心能力**：模板库（标题+副标题+品牌名+logo+网址）、渐变/纯色/网格背景、多尺寸（OG 1200×630、X 1600×900、小红书/LinkedIn）、字体大小与对齐调节、PNG 下载、按 URL 参数自动填充（可配合博客链接动态生成）。
+- **技术可行性**：纯前端 Canvas 文字排版（注意 CJK 换行与字体加载），logo 复用 QR Code 的上传逻辑。
+- **参考产品**：LogoFast OG、og-image 类 Vercel 模板、Cloudinary OG。
+- **理由**：与 #9 构成"上线视觉资产两件套"，开发模式高度复用；indie hacker 每篇内容都需要，使用频次高。
+
+#### 11. Meta Tags Preview & Debugger — 中高
+- **场景**：上线前输入 URL，检查 Google 搜索摘要、Facebook/Twitter/LinkedIn/微信分享卡片长什么样、缺哪些标签。
+- **核心能力**：serverless 抓取目标 HTML，解析 title/description/canonical/OG/Twitter Card/JSON-LD；按平台渲染分享卡片预览；问题清单（标签缺失、图片尺寸不符、描述超长截断提示）；一键复制修复用 meta 片段。
+- **技术可行性**：需 api serverless（复用 proxy.js 的 SSRF 防护与超时）；HTML 解析手写正则即可。
+- **参考产品**：metatags.io、opengraph.xyz、heymeta。
+- **理由**：把 #9/#10 产出的资产"验收闭环"，三个工具互相导流；搜索量稳定，且竞品普遍广告多、体验旧。
+
+#### 12. Markdown Studio — 中
+- **场景**：写 README、博客、文档；MD ↔ HTML 互转、表格处理。
+- **核心能力**：左右分栏实时预览、GitHub 风格 MD 解析、MD→HTML、HTML→MD、MD 表格 ↔ CSV/JSON、目录(TOC)生成、字数统计、复制/下载。
+- **技术可行性**：纯前端，内嵌一份精简 MD 解析器（marked 风格，源码内嵌单页）。
+- **参考产品**：stackedit、dillinger、it-tools Markdown。
+- **理由**：OPC 写 README 和 newsletter 几乎每天发生；可顺带承接历史建议中 JSON→Markdown 表格导出的需求。
+
+#### 13. UTM Link Builder — 中
+- **场景**：一个人做增长，给不同渠道（邮件/推特/合作链接）加 UTM 参数并追踪。
+- **核心能力**：表单式 utm_source/medium/campaign/term/content、实时链接预览、短链参数校验、历史记录、批量生成；可一键跳转 QR Code 把链接变成二维码。
+- **技术可行性**：纯前端 URL 拼接。
+- **参考产品**：ga-dev-tools Campaign Builder、utm.io。
+- **理由**：开发量极小，与 QR Code、Trend Radar 形成"链接三件套"互链；是获客环节的基础工具。
+
+#### 14. Stripe Fee & MRR/ARR Calculator — 中低
+- **场景**：定价时算 Stripe/PayPal 实际到账、MRR↔ARR、需要多少客户达到目标月收入。
+- **核心能力**：多费率档位（Stripe 国际/国内支付）、MRR/ARR/ARPU 换算、目标倒推（目标 MRR ÷ 客单价 = 客户数）、分享结果链接。
+- **技术可行性**：纯前端计算。
+- **参考产品**：stripe.com/fees 计算器、baremetrics 计算器。
+- **理由**：单页小工具、搜索意图明确；作为"收钱环节"补位，优先级低于上线资产类。
+
+### 三、现有工具增强建议
+
+1. **首页工具目录化（优先级提高）**：上线 Trend Radar 后共 6 个工具，#9/#10 落地后将达 8 个，首页需要分组（Dev / Launch / Growth / Ops）、搜索框、最近使用——建议在第 8 个工具上线时同步做。
+2. **Trend Radar 后续**：① 推送上线；② AI 中文早报（需 LLM API，可在 cron 预热链路里加一步生成，结果随 JSON 返回）；③ 加 Product Hunt/YouTube 源（用户配置 env token 后启用）。
+3. **QR Code Studio**：与 #13 UTM Builder 联动（UTM 链接一键生成二维码）；加批量生成入口。
+4. **JSON Lab**：JSON→CSV/Markdown 导出仍建议优先（可与 #12 Markdown Studio 共用表格转换逻辑）。
+5. **PWA 化**：#9 产出的 manifest/图标正好可以直接用于 WeUtil 自身的 PWA 离线化，两个工作天然合并。
+
+### 四、趋势与新视角
+
+- **"Launch Asset（上线资产）"是 2026 indie hacker 工具最密集的新品类**：favicon、OG image、icon bundle、meta preview 在 PH 上半年内集中出现，且全部以 client-side 为卖点——WeUtil 用 #9-#11 三连切这个方向，工具间可互相导流，形成"上线前工具箱"的组合心智。
+- **订阅疲劳催生免费本地整合工具**：PH 新品 SoloPM 的核心叙事就是"一人工作室被 10+ 订阅和 per-seat 定价压垮"——这正是 WeUtil"免费、无账号、本地运行"的结构性机会，建议首页文案强化"$0, no seat, no signup"。
+- **SEO 是 OPC 最大的系统性缺口**：多份 2026 stack 复盘都指出 solo founder 普遍不做 SEO，而 GSC/robots/sitemap/meta/OG 这条链全是免费可工具化的环节；#10/#11/#13 都在这条链上。
+- **AI agent 内容管线兴起**：research brief → 成稿的 agent 工作流被频繁提及，Trend Radar 的 AI 简报是 WeUtil 切入这个叙事最轻的方式。
+
+### 五、待验证
+
+- ICO 编码器与极简 ZIP 打包在"零依赖"原则下的实现成本（预计各 100-200 行可覆盖）。
+- Meta Tags 抓取对 SPA 站点（客户端渲染）无效的边界，需在结果中明确提示。
+- Formspree 后台真实用户反馈仍待人工导出，建议本周查看一次。
