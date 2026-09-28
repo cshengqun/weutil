@@ -107,7 +107,7 @@ footer a{color:var(--muted)} footer a:hover{color:var(--accent)}
 <main class="wrap">
   <section class="hero">
     <h1>Trend <span class="grad">Radar</span></h1>
-    <p>Daily signals for one-person companies: what builders, developers and people worldwide are paying attention to right now. Aggregated from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Product Hunt, YouTube Trending, X and Weibo. Refreshed daily.</p>
+    <p>Daily signals for one-person companies: what builders, developers and people worldwide are paying attention to right now. Aggregated from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Product Hunt, YouTube Trending and X. Refreshed daily.</p>
     <div class="meta-row">
       <span class="chip live" id="updated">loading…</span>
       <span class="chip">multi-source</span>
@@ -201,48 +201,12 @@ let lastData = null;
 const origRender = render;
 render = function(data){ lastData = data; origRender(data); };
 
-// Mapping for the daily snapshot JSON (trends-data/YYYY-MM-DD.json)
-const SNAPSHOT_META = {
-  weibo_hot:          {icon:'🔥', name:'Weibo Hot Search', url:'https://s.weibo.com/top/summary'},
-};
-
-function snapshotToCards(snap){
-  if(!snap || !snap.sources) return [];
-  return Object.entries(snap.sources).map(([key, arr]) => {
-    const meta = SNAPSHOT_META[key] || {icon:'📌', name:key, url:'#'};
-    const items = (arr||[]).map(it => {
-      let title, score, sub, url = meta.url;
-      if(key === 'weibo_hot'){ title=it.keyword; score=it.search_volume; sub=it.tag||''; }
-      else { title=it.title||it.keyword; score=it.score||''; sub=it.sub||''; }
-      return {title, score, sub, url};
-    });
-    return {id:key, icon:meta.icon, name:meta.name, ok:true, items};
-  }).filter(c => SNAPSHOT_META[c.id]); // only keep sources we still want
-}
-
-async function loadSnapshot(){
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  const url = `/trends-data/${yyyy}-${mm}-${dd}.json`;
-  try{
-    const r = await fetch(url, {cache:'no-store'});
-    if(!r.ok) return [];
-    const snap = await r.json();
-    return snapshotToCards(snap);
-  }catch(e){ return []; }
-}
-
 async function load(){
   updatedEl.textContent = 'loading…';
   try{
-    const [apiData, snapCards] = await Promise.all([
-      fetch('/api/trends', { cache: 'no-store' }).then(r=>r.json()).catch(()=>({sources:[]})),
-      loadSnapshot()
-    ]);
-    const mergedSources = [...(apiData.sources||[]), ...snapCards];
-    render({sources: mergedSources, generatedAt: apiData.generatedAt});
+    const r = await fetch('/api/trends', { cache: 'no-store' });
+    const data = await r.json();
+    render(data);
   }catch(e){
     updatedEl.textContent = 'failed to load';
     grid.innerHTML = '<div class="card"><div class="empty">Could not reach the trend API. Try refreshing.</div></div>';
