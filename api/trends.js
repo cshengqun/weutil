@@ -8,11 +8,13 @@
 
 const UA = 'WeUtil-TrendRadar/1.0 (+https://weutil.top)';
 
-async function fetchText(url, { timeout = 8000, headers = {} } = {}) {
+async function fetchText(url, { timeout = 8000, headers = {}, method = 'GET', body } = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
     const r = await fetch(url, {
+      method,
+      body,
       headers: { 'User-Agent': UA, Accept: 'application/json, text/html;q=0.9', ...headers },
       signal: ctrl.signal,
       redirect: 'follow',
@@ -24,31 +26,22 @@ async function fetchText(url, { timeout = 8000, headers = {} } = {}) {
   }
 }
 
-// ---------- Source 1: GitHub Trending (daily, all languages) ----------
+// ---------- Source 1: GitHub Trending (Search API: repos created in last 24h, sorted by stars) ----------
 async function githubTrending() {
-  const html = await fetchText('https://github.com/trending?since=daily');
-  const out = [];
-  // Split on each article block
-  const blocks = html.split('<article class="Box-row">').slice(1);
-  for (const block of blocks) {
-    const mRepo = block.match(/<h2[^>]*>\s*<a[^>]*href="([^"]+)"/);
-    if (!mRepo) continue;
-    const repo = mRepo[1].trim().replace(/^\//, '');
-    const mDesc = block.match(/<p[^>]*class="[^"]*col-9[^"]*"[^>]*>([\s\S]*?)<\/p>/);
-    const desc = mDesc ? mDesc[1].replace(/<[^>]+>/g, '').trim() : '';
-    const mStars = block.match(/href="\/[^"]+\/stargazers"[^>]*>\s*([\d,]+)/);
-    const stars = mStars ? parseInt(mStars[1].replace(/,/g, ''), 10) : 0;
-    const mToday = block.match(/([\d,]+)\s*stars\s*today/i);
-    const today = mToday ? parseInt(mToday[1].replace(/,/g, ''), 10) : 0;
-    out.push({
-      title: repo,
-      url: 'https://github.com/' + repo,
-      score: today,
-      sub: desc || ('★ ' + stars.toLocaleString()),
-    });
-    if (out.length >= 10) break;
-  }
-  return out;
+  const since = new Date(Date.now() - 24*3600*1000).toISOString().slice(0,10);
+  const token = process.env.GITHUB_TOKEN;
+  const headers = { 'Accept': 'application/vnd.github+json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const json = JSON.parse(await fetchText(
+    `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=10`,
+    { headers, timeout: 10000 }
+  ));
+  return (json.items || []).slice(0, 10).map(r => ({
+    title: r.full_name,
+    url: r.html_url,
+    score: r.stargazers_count || 0,
+    sub: (r.description || 'no description') + (r.language ? ' · ' + r.language : ''),
+  }));
 }
 
 // ---------- Source 2: Hacker News (top stories, filter Show HN / high score) ----------
@@ -117,12 +110,57 @@ async function arxiv() {
   return out;
 }
 
+// ---------- Source 6: Product Hunt (today's posts, top votes) ----------
+async function productHunt() {
+  const token = process.env.PRODUCTHUNT_TOKEN;
+  if (!token) throw new Error('PRODUCTHUNT_TOKEN not set');
+  const query = `query { posts(order: VOTES, first: 10) { edges { node { name tagline url votesCount } } } }`;
+  const json = JSON.parse(await fetchText('https://api.producthunt.com/v2/api/graphql', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+    timeout: 10000,
+  }));
+  const edges = (json.data && json.data.posts && json.data.posts.edges) || [];
+  return edges.slice(0, 10).map(e => {
+    const p = e.node;
+    return {
+      title: p.name,
+      url: p.url,
+      score: p.votesCount || 0,
+      sub: p.tagline || '',
+    };
+  });
+}
+
+// ---------- Source 7: YouTube Trending (US, most popular) ----------
+async function youtubeTrending() {
+  const key = process.env.YOUTUBE_API_KEY;
+  if (!key) throw new Error('YOUTUBE_API_KEY not set');
+  const json = JSON.parse(await fetchText(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=US&maxResults=10&key=${key}`,
+    { timeout: 10000 }
+  ));
+  return (json.items || []).slice(0, 10).map(v => ({
+    title: v.snippet.title,
+    url: 'https://www.youtube.com/watch?v=' + v.id,
+    score: parseInt(v.statistics.viewCount || 0, 10),
+    sub: v.snippet.channelTitle + ' · 👍 ' + (parseInt(v.statistics.likeCount||0,10)/1000).toFixed(1) + 'K',
+  }));
+}
+
 const SOURCES = [
   { id: 'github', name: 'GitHub Trending', icon: '🐙', fetch: githubTrending },
   { id: 'hn', name: 'Hacker News', icon: '📰', fetch: hackerNews },
   { id: 'lobsters', name: 'Lobsters', icon: '🦞', fetch: lobsters },
   { id: 'hf', name: 'Hugging Face', icon: '🤗', fetch: huggingface },
   { id: 'arxiv', name: 'arXiv cs.AI', icon: '🧪', fetch: arxiv },
+  { id: 'ph', name: 'Product Hunt', icon: '🏹', fetch: productHunt },
+  { id: 'youtube', name: 'YouTube Trending (US)', icon: '▶️', fetch: youtubeTrending },
 ];
 
 export default async function handler(req, res) {
