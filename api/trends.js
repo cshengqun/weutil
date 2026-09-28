@@ -153,6 +153,29 @@ async function youtubeTrending() {
   }));
 }
 
+// ---------- Source 8: X / Twitter Worldwide trends (trends24.in) ----------
+async function xTrends() {
+  const html = await fetchText('https://trends24.in/', { timeout: 10000 });
+  // Each trend is: <a href="https://twitter.com/search?q=..." class=trend-link>WORD</a>
+  const matches = [...html.matchAll(/class=trend-link>([^<]+)<\/a>/g)];
+  const seen = new Set();
+  const out = [];
+  for (const m of matches) {
+    const word = m[1].trim();
+    if (!word || word.length < 2) continue;
+    if (seen.has(word.toLowerCase())) continue;
+    seen.add(word.toLowerCase());
+    out.push({
+      title: word,
+      url: 'https://trends24.in/',
+      score: out.length + 1,
+      sub: 'X trending worldwide',
+    });
+    if (out.length >= 15) break;
+  }
+  return out;
+}
+
 const SOURCES = [
   { id: 'github', name: 'GitHub Trending', icon: '🐙', fetch: githubTrending },
   { id: 'hn', name: 'Hacker News', icon: '📰', fetch: hackerNews },
@@ -161,6 +184,7 @@ const SOURCES = [
   { id: 'arxiv', name: 'arXiv cs.AI', icon: '🧪', fetch: arxiv },
   { id: 'ph', name: 'Product Hunt', icon: '🏹', fetch: productHunt },
   { id: 'youtube', name: 'YouTube Trending (US)', icon: '▶️', fetch: youtubeTrending },
+  { id: 'x', name: 'X / Twitter Worldwide', icon: '𝕏', fetch: xTrends },
 ];
 
 export default async function handler(req, res) {

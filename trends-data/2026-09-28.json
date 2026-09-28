@@ -2,18 +2,6 @@
   "date": "2026-09-28",
   "captured_at": "2026-09-28T19:00:00+08:00",
   "sources": {
-    "twitter_trends": [
-      {"rank":1,"keyword":"#LingOrmDiorAirportLook"},
-      {"rank":2,"keyword":"#最大500個オーブバック"},
-      {"rank":3,"keyword":"Rams"},
-      {"rank":4,"keyword":"#TarangShakti2026"},
-      {"rank":5,"keyword":"Broncos"},
-      {"rank":6,"keyword":"#Multibagger_Stock_Pick"},
-      {"rank":7,"keyword":"#GranjaVIP"},
-      {"rank":8,"keyword":"CONGRATULATIONS BTS"},
-      {"rank":9,"keyword":"RIP PAC"},
-      {"rank":10,"keyword":"Madonna"}
-    ],
     "weibo_hot": [
       {"rank":1,"keyword":"中国队亚运王者夺金","search_volume":2303458,"tag":"新"},
       {"rank":2,"keyword":"教练没有把家书给张家齐","search_volume":1224253,"tag":"新"},

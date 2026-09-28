@@ -203,7 +203,6 @@ render = function(data){ lastData = data; origRender(data); };
 
 // Mapping for the daily snapshot JSON (trends-data/YYYY-MM-DD.json)
 const SNAPSHOT_META = {
-  twitter_trends:     {icon:'𝕏', name:'X / Twitter Trends', url:'https://trends24.in/'},
   weibo_hot:          {icon:'🔥', name:'Weibo Hot Search', url:'https://s.weibo.com/top/summary'},
 };
 
@@ -213,8 +212,7 @@ function snapshotToCards(snap){
     const meta = SNAPSHOT_META[key] || {icon:'📌', name:key, url:'#'};
     const items = (arr||[]).map(it => {
       let title, score, sub, url = meta.url;
-      if(key === 'twitter_trends'){ title='#'+it.keyword.replace(/^#/,''); score='#'+it.rank; sub=''; }
-      else if(key === 'weibo_hot'){ title=it.keyword; score=it.search_volume; sub=it.tag||''; }
+      if(key === 'weibo_hot'){ title=it.keyword; score=it.search_volume; sub=it.tag||''; }
       else { title=it.title||it.keyword; score=it.score||''; sub=it.sub||''; }
       return {title, score, sub, url};
     });
