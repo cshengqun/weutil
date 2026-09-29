@@ -203,3 +203,93 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 - ICO 编码器与极简 ZIP 打包在"零依赖"原则下的实现成本（预计各 100-200 行可覆盖）。
 - Meta Tags 抓取对 SPA 站点（客户端渲染）无效的边界，需在结果中明确提示。
 - Formspree 后台真实用户反馈仍待人工导出，建议本周查看一次。
+
+---
+
+## 2026-09-29
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client、QR Code Studio、Trend Radar（9 源 serverless）、Feedback |
+| Trend Radar 最新 | GitHub/HN/Lobsters/HF/arXiv/PH/YouTube/X/Google Trends US，全部 serverless，无本机快照依赖 |
+| 定时任务 | 本机趋势采集 cron 已删除；功能探索 cron 已改为每天 9:00（Asia/Shanghai） |
+| 待验收 | Product Hunt + YouTube token 已配 Vercel，线上渲染效果待确认 |
+
+历史建议 #1-#14 均未落地新工具（#1 QR Code 已上线）。本次不重复展开 #2-#14，只新增方向。
+
+### 二、新功能建议（6 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 15 | Prompt Studio（AI Prompt 构建器 + Token 计数器） | 写 AI prompt、调 token | 纯前端（WASM tokenizer） | **高** |
+| 16 | Sitemap & Robots.txt Studio | SEO 上线前必备 | 纯前端 + serverless 验证 | **中高** |
+| 17 | Launch Checklist（产品上线检查清单） | 发产品前不遗漏 | 纯前端交互 checklist | 中 |
+| 18 | Email Subject Line Analyzer | Newsletter/邮件获客 | 纯前端 | 中 |
+| 19 | Fake Data Generator（JSON Schema → 假数据） | 造测试数据/Mock API | 纯前端 | 中 |
+| 20 | Color Palette Generator | Landing page 配色 | 纯前端 Canvas | 中低 |
+
+#### 15. Prompt Studio（AI Prompt 构建器 + Token 计数器）— 高
+- **场景**：OPC 每天用 Claude/ChatGPT/Cursor 写 prompt，需要结构化管理变量、估算 token 消耗、复用模板。
+- **核心能力**：结构化 prompt 编辑（system/user/assistant 分栏）、变量插入（{{name}}）、实时 token 计数（内嵌 tiktoken WASM 或 GPT-style 估算）、prompt 模板库（代码审查/写作/翻译/总结）、保存到 localStorage、复制为 API 调用格式。
+- **技术可行性**：纯前端。token 计数可用轻量估算（~4 chars/token）或内嵌 tiktoken WASM（~500KB，按需加载）。
+- **参考产品**：PromptPerfect、PromptBuilder、LangChain Hub 编辑器。
+- **理由**：2026 年 AI coding agent（Lovable/Bolt/Cursor/Claude Code）主导 Builder 工作流，prompt 是新的"源代码"；每个 Builder 每天写 prompt 但没有好的本地工具；纯前端运行契合隐私卖点。
+
+#### 16. Sitemap & Robots.txt Studio — 中高
+- **场景**：产品上线前配 SEO，一个人不会写 sitemap.xml 格式，也不知道 robots.txt 该怎么写。
+- **核心能力**：输入域名/URL 列表 → 自动生成标准 sitemap.xml（含 lastmod/changefreq/priority）；robots.txt 可视化编辑器（Allow/Disallow 规则、Sitemap 声明、常见爬虫预设）；serverless 一键检查线上 robots.txt 是否 block 了搜索引擎；下载 .xml/.txt 文件。
+- **技术可行性**：纯前端生成；检查功能复用 api/proxy.js 抓取目标站点 robots.txt。
+- **参考产品**：xml-sitemaps.com、robots.txt generator 类工具。
+- **理由**：SEO 是 OPC 最大系统性缺口（多份 2026 stack 复盘确认）；和 #11 Meta Tags Preview、#13 UTM Builder 构成 SEO 三件套；开发量小。
+
+#### 17. Launch Checklist（产品上线检查清单）— 中
+- **场景**：一个人发产品，容易漏掉关键项——analytics 没装、隐私政策页没有、OG image 没配、邮件列表没接。
+- **核心能力**：交互式 checklist 按工作流分组（Pre-launch → Launch → Post-launch），每组含具体检查项（如"GA4/Plausible 已装"、"OG image 已生成"、"Stripe webhook 已配置"、"隐私政策页存在"）；进度条；本地保存勾选状态；可打印/导出 PDF。
+- **技术可行性**：纯前端，数据写死在 JS 里。
+- **参考产品**：Launch Checklist 类网站（e.g. launch checklist for indie hackers）。
+- **理由**：OPC 发产品高频场景；和 #9 Favicon、#10 OG Image、#11 Meta Preview、#16 Sitemap 形成"上线前工具箱"导流闭环；开发量极小。
+
+#### 18. Email Subject Line Analyzer — 中
+- **场景**：OPC 做 newsletter/邮件营销获客，标题决定打开率，一个人没有 Copy.ai 这类付费工具。
+- **核心能力**：输入邮件标题 → 分析长度（最佳 6-10 词）、情感词检测、emoji 建议、数字/符号使用、spam trigger words 检测（"free/guaranteed/act now"等）、A/B 两个标题对比打分。
+- **技术可行性**：纯前端词典 + 规则。
+- **参考产品**：CoSchedule Headline Analyzer、Subject.com。
+- **理由**：Newsletter 是 OPC 核心获客渠道（Beehiiv/Mailchimp）；竞品都是重型 SaaS，纯前端轻量版有差异化；开发量小。
+
+#### 19. Fake Data Generator（JSON Schema → 假数据）— 中
+- **场景**：做前端/调试 API 时需要造测试数据；OPC 做 landing form 演示需要假用户数据。
+- **核心能力**：输入 JSON 模板（含类型提示 `{{name}}` `{{email}}` `{{date}}` `{{number:1-100}}`），批量生成 N 条假数据；支持姓名/邮箱/电话/日期/URL/UUID/中文姓名；导出 JSON/CSV。
+- **技术可行性**：纯前端，内嵌小型 faker 实现（姓名池/邮箱生成器）。
+- **参考产品**：Mockaroo、JSON Generator。
+- **理由**：和 JSON Lab 天然联动（粘贴假 JSON → 格式化）；AI 时代造 mock 数据需求上升；纯前端隐私卖点。
+
+#### 20. Color Palette Generator — 中低
+- **场景**：Builder 做 landing page 不懂配色，需要从一个品牌色生成整套配色方案。
+- **核心能力**：输入主色 HEX → 自动生成 5-8 色配色（类比色/互补色/三角色/单色调）；导出 CSS variables、Tailwind config、SVG 色板预览；对比度检查（WCAG AA/AAA）。
+- **技术可行性**：纯前端 HSL 色彩数学计算。
+- **参考产品**：Coolors、ColorHexa。
+- **理由**：和 #10 OG Image、#9 Favicon 同属"视觉资产"链；开发量极小，但竞品强（Coolors 体验很好），优先级中低。
+
+### 三、现有工具增强建议
+
+1. **首页 Trend Radar 卡片描述需更新**：现在有 9 个源（GitHub/HN/Lobsters/HF/arXiv/PH/YouTube/X/Google Trends），首页卡片仍写"aggregates GitHub Trending, Hacker News, Lobsters, Hugging Face and arXiv"——应更新为"9 sources"并补上 PH/YouTube/X/Google Trends。
+2. **Trend Radar AI 中文早报**：之前多次提到，可在 Vercel Cron 预热时调一次 LLM API，把当天 top items 总结成一段中文简报，随 API JSON 返回，前端在页面顶部展示。这是 WeUtil 差异化最大的 feature。
+3. **JSON Lab**：JSON→CSV 导出仍建议优先（PM/数据分析场景高频）。
+4. **全站 PWA 化**：#9 Favicon Studio 落地时正好顺带做 WeUtil 自身的 manifest + Service Worker。
+
+### 四、趋势与新视角
+
+- **AI coding agent 主导 2026 Builder 工作流**：Lovable/Bolt/Cursor/Claude Code 已成 OPC 标配（$20-40/月），Builder 从"写代码"变成"写 prompt + 审代码"——Prompt Studio 是这个转变下的直接工具需求。
+- **工具疲劳（tool fatigue）是 OPC 第一痛点**：多份 2026 报告指出 solopreneur 平均用 7+ 工具，订阅成本 $100-300/月——WeUtil"$0, no signup, local-first"的定位正好切这个痛点，建议首页文案强化"stop paying for tools you use once a month"。
+- **SEO 仍是 OPC 最大缺口**：多份 stack 复盘确认 solo founder 普遍不做 SEO，而 sitemap/robots/meta/OG/UTM 这条链全是免费可工具化的环节——#16 + #11 + #13 三连切这个方向。
+- **Newsletter/email list 是 OPC 核心获客渠道**：Beehiiv/Mailchimp 免费层支撑 2500 订阅者，发产品时"发给已有 list"是第一波启动流量——#18 Email Subject Analyzer 直接服务这个环节。
+
+### 五、待验证
+
+- tiktoken WASM 在 Vercel serverless 冷启动下的体积限制（若纯前端则无此问题，token 计算在浏览器端）。
+- Formspree 后台用户反馈仍未查看，建议本周人工导出一次高频需求。
+- Trend Radar 线上 Product Hunt/YouTube 卡片渲染效果待用户验收。
