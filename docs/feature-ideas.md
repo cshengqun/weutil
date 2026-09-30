@@ -293,3 +293,92 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 - tiktoken WASM 在 Vercel serverless 冷启动下的体积限制（若纯前端则无此问题，token 计算在浏览器端）。
 - Formspree 后台用户反馈仍未查看，建议本周人工导出一次高频需求。
 - Trend Radar 线上 Product Hunt/YouTube 卡片渲染效果待用户验收。
+
+---
+
+## 2026-09-30
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client、QR Code Studio、Trend Radar（9 源 serverless）、Feedback |
+| 自上次探索以来代码变更 | 无新工具上线（最新 commit 为 2026-09-29 的 docs 探索记录） |
+| 候选池 | #2-#20 共 19 个建议待排期（#1 QR Code 已落地），本次不重复展开 |
+| 用户反馈 | feedback 走 Formspree，后台内容仍未导出查看（连续两期待办） |
+
+### 二、新功能建议（6 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 21 | Legal Pages Studio（隐私政策/服务条款/Cookie 政策生成器） | SaaS 上线前必备法律页 | 纯前端（向导 + 模板） | **高** |
+| 22 | Invoice Generator（发票/账单生成器） | 自由职业/接单收钱 | 纯前端（打印为 PDF） | **中高** |
+| 23 | CSV Studio（CSV↔JSON、清洗、去重） | 数据处理、邮件列表清洗 | 纯前端 | 中 |
+| 24 | Webhook Inspector（Webhook 调试接收器） | 调试 Stripe/GitHub 等回调 | 需 serverless + KV 存储 | 中 |
+| 25 | Changelog Generator（发版日志生成器） | 产品迭代发布 | 需 api serverless（GitHub API） | 中 |
+| 26 | README Badge Studio（SVG 徽章生成器） | README 美化、状态展示 | 纯前端（SVG 生成） | 中低 |
+
+#### 21. Legal Pages Studio（隐私政策 / 服务条款 / Cookie 政策生成器）— 高
+- **场景**：OPC 把 SaaS 上线到 Stripe 收款阶段，支付商和应用商店都要求隐私政策与服务条款；一个人不会找律师，现有生成器（Termly、PrivacyPolicies.com、GetTerms）要么要邮箱注册、要么免费版缺 GDPR 条款、要么按页收费。
+- **核心能力**：表单向导（产品名/网址/收集的数据类型/是否用 Cookie/是否用 Stripe 或 GA/联系方式）→ 生成 Privacy Policy、Terms of Service、Cookie Policy 三份文档；勾选式条款库（GDPR/CCPA 适配声明、分析工具、第三方处理器清单）；HTML / Markdown / 纯文本导出；明确"非法律意见，使用前自行审核"免责声明。
+- **技术可行性**：纯前端。条款模板写死在 JS 中按条件拼装，零外部依赖。
+- **参考产品**：Termly、GetTerms、PrivacyPolicies.com、PolicyGen（2026-03 登 PH，"答 12 个问题即时生成，免注册"）。
+- **理由**：上线收款的强制前置环节，搜索意图极强（"privacy policy generator free"是百万级月搜词）；竞品普遍邮箱门控+付费墙，"免注册、纯本地、可直接复制 HTML"是明确差异化；与 #9 Favicon、#10 OG Image、#16 Sitemap、#17 Launch Checklist 共同构成完整"上线工具箱"。
+
+#### 22. Invoice Generator（发票 / 账单生成器）— 中高
+- **场景**：独立开发者接外包、卖 lifetime deal、收咨询费，需要给客户开发票/账单；不想订阅 QuickBooks、FreshBooks。
+- **核心能力**：填写发件人/收件人信息、行项目（描述/数量/单价）、税率、币种、发票号与日期；实时预览专业版式发票；浏览器打印为 PDF；localStorage 保存发件人信息与发票编号序列；支持美元/欧元/人民币等多币种。
+- **技术可行性**：纯前端 HTML 排版 + `window.print()` 打印样式（@media print），无需 PDF 库。
+- **参考产品**：Invoice Simple、Wave Invoice Generator、invoice-generator.com。
+- **理由**：补全 OPC 工作流"收钱运营"环节（目前只有 #14 Stripe Fee Calculator 一个点）；搜索量大、纯静态可实现、隐私卖点突出（账单财务数据不上传）；开发量小。
+
+#### 23. CSV Studio（CSV ↔ JSON / 清洗 / 去重）— 中
+- **场景**：OPC 从 Plausible/Stripe/Mailchimp 导出 CSV，需要转 JSON 喂脚本、清洗邮件列表（去重、去空行、按列筛选）；运营批量处理数据。
+- **核心能力**：CSV↔JSON 双向转换（自定义分隔符、表头识别）、按列去重、空行/空白清理、列筛选与排序、行数统计、大文件分块处理；结果导出 CSV/JSON。
+- **技术可行性**：纯前端，注意用流式/分块解析处理 10MB+ 文件，避免页面卡死。
+- **参考产品**：ConvertCSV、CyberChef、devlab 的 CSV Cleaner。
+- **理由**：DevKitLab、devlab 等同类工具站均把 CSV 工具列为高频品类；与 JSON Lab 互相导流（JSON→CSV 导出在历史增强建议中已被两次提及，本工具直接承接）；非程序员也能用，是拉新流量品。
+
+#### 24. Webhook Inspector（Webhook 调试接收器）— 中
+- **场景**：OPC 接入 Stripe 支付回调、GitHub webhook、Contact form 转发时，需要一个临时 URL 查看对方实际发来的 headers 和 payload；本地开发时还要能转发到 localhost。
+- **核心能力**：打开页面即获得唯一 URL（如 /api/hook/{id}）；serverless 接收任意 POST/GET 并存储；前端轮询/SSE 实时展示请求列表、headers、query、格式化 body；支持自定义响应状态码与 body（mock 回调）；请求历史保留 24-48 小时。
+- **技术可行性**：需 api serverless + 持久化。Vercel 纯函数无状态，需配 Vercel KV（Upstash Redis 免费层）或外部免费 KV；这是本建议与纯静态栈的主要差距，落地前需验证 KV 免费额度与冷启动。
+- **参考产品**：webhook.site、RequestBin、Svix Play、Hook0 Play、DevToolLab Webhook Receiver。
+- **理由**：2026 年开发者工具站的"标配品类"（DevToolLab 把它列为 Popular 第一位）；与 HTTP Client 形成"发出请求 + 接收回调"的完整调试闭环；但竞品多且强，差异化只能靠"免注册+干净 UI"，且引入首个有状态依赖，建议在纯前端工具铺到 10 个以后再做。
+
+#### 25. Changelog Generator（发版日志生成器）— 中
+- **场景**：OPC 频繁发版但懒得手写 changelog；需要从 GitHub 自上次 tag 以来的 commits / PR 自动归类（Features / Fixes / Other）生成 Markdown 发布日志。
+- **核心能力**：输入 repo + 两个 tag（或 since 日期），serverless 调 GitHub API 拉 commits/PR；按 conventional commits（feat:/fix:/chore:）自动分组；输出 Keep a Changelog 格式 Markdown，可编辑后复制；可选一键填充 GitHub Release notes。
+- **技术可行性**：需 api serverless（复用已有 GITHUB_TOKEN 与 GitHub API 模式）；分组逻辑纯字符串规则。
+- **参考产品**：release-prompt、GitHub Auto Release Notes、changelog.md 生成器。
+- **理由**：WeUtil 自身就在高频发版，dogfooding 成本低；与 Trend Radar 共用 GitHub API 基建；开发者搜索意图明确。优先级中是因为 conventional commits 不规范时输出质量打折，需要人工编辑兜底。
+
+#### 26. README Badge Studio（SVG 徽章生成器）— 中低
+- **场景**：开发者给 README 加"license / version / stars / 自定义状态"徽章；不会写 shields.io URL 参数。
+- **核心能力**：表单式选择左右文案、颜色、样式（flat/flat-square/plastic）、logo（简单内置几个）；实时预览；生成 shields.io URL 或纯前端自绘 SVG（无外部依赖）；批量生成。
+- **技术可行性**：纯前端 SVG 字符串生成；自绘版本零外部请求，也可默认提供 shields.io 链接。
+- **参考产品**：shields.io、badgen.net。
+- **理由**：开发量极小、纯静态契合；但 shields.io 本身免费且极成熟，独立价值有限，适合作为 Markdown Studio（#12）或上线工具箱的附属小功能，不建议单独立项做重。
+
+### 三、现有工具增强建议
+
+1. **JSON Lab 增加 JSONPath / jq 求值器**：DevKitLab、devlab 等竞品已把"JSONPath 查询 + jq 过滤 + 匹配计数"作为 JSON 工具的标配功能，WeUtil 目前只能复制 JSONPath 不能执行验证，建议加一个查询输入框，对已粘贴的 JSON 实时求值并高亮匹配节点。
+2. **首页 Trend Radar 卡片描述过期**：卡片仍写"Aggregates GitHub Trending, Hacker News, Lobsters, Hugging Face and arXiv"5 个源，实际已 9 个源（+Product Hunt/YouTube/X/Google Trends US），SEO 文案与 features tags 需同步更新。
+3. **Trend Radar AI 中文早报**：连续三期提及仍未落地，仍是全站差异化最大的 feature；建议在 Vercel Cron 预热链路中加一步 LLM 总结，随 JSON 返回，前端顶部展示 3-5 句话。
+4. **HTTP Client 与 #24 Webhook Inspector 联动**：未来做 webhook 调试时，HTTP Client 可直接把某个请求"发送到我的 hook URL"做回放，形成调试闭环。
+
+### 四、趋势与新视角
+
+- **工具站进入"广度军备竞赛"，WeUtil 不应跟进**：DevToolLab 宣称 500+ 浏览器工具、DevKitLab 40+ 工具终端式聚合——拼数量是纯 SEO 打法，单工具体验普遍粗糙。WeUtil 的机会是"OPC 工作流精选工具箱"：每个工具都做到上线即用、互相导流（上线资产链：Favicon→OG→Meta→Sitemap→Legal Pages→Launch Checklist 已现雏形）。
+- **法律页面生成是被付费墙和邮箱门控让出的缺口**：2026 年主流隐私政策生成器全部要求注册或按文档收费，而 PolicyGen 这类"答 12 题免注册即时生成"的新品在 PH 表现良好——与 WeUtil"免注册、本地运行"的定位完全吻合，是本期最高优先级。
+- **Webhook 调试已成开发者工具站标配**：webhook.site、RequestBin、Svix Play、Hook0 Play、DevToolLab 五家以上在做，且都主打"打开即得 URL、免注册"；说明需求真实且高频，但也意味着后发者必须靠体验和与其他工具的联动取胜。
+- **MCP / Agent 工具链讨论升温**：Simon Willison 等意见领袖在强调 agent 时代的认证隔离、审计日志、MCP 价值；OPC 用 AI agent 干活时需要的配套小工具（如 MCP server 配置生成器、agent prompt 模板）可能是下一个新工具位，建议持续观察 1-2 周再决定是否立项。
+- **"Solo SaaS 数字看板"在 Indie Hackers 走热**：Know My SaaS 等产品主打"自动告诉创始人关键数字"，反映一人公司对轻量化运营分析的需求；这类产品本身是 SaaS 不适合静态栈，但其中可工具化的单点（如 MRR 测算 #14、Stripe 费用计算）仍值得逐个覆盖。
+
+### 五、待验证
+
+- Vercel KV（UpStash Redis）免费层的请求额度与数据保留期，决定 #24 Webhook Inspector 是否零成本可行。
+- 法律模板的多地区适配深度：GDPR/CCPA 条款模板可自行整理，但需在页面显著位置声明"非法律意见"；首期建议只做英文 + 通用国际版，不做特定国家细分区。
+- Formspree 后台用户反馈已连续两期未导出，建议尽快人工查看一次，避免闭门造工具。
