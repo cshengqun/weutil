@@ -382,3 +382,86 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 - Vercel KV（UpStash Redis）免费层的请求额度与数据保留期，决定 #24 Webhook Inspector 是否零成本可行。
 - 法律模板的多地区适配深度：GDPR/CCPA 条款模板可自行整理，但需在页面显著位置声明"非法律意见"；首期建议只做英文 + 通用国际版，不做特定国家细分区。
 - Formspree 后台用户反馈已连续两期未导出，建议尽快人工查看一次，避免闭门造工具。
+
+---
+
+## 2026-10-01
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client、QR Code Studio、Trend Radar（9 源 serverless）、Feedback |
+| 自上次探索以来代码变更 | 无新工具上线（最新 commit 为 2026-09-30 的 docs 探索记录 2cbf638） |
+| 候选池 | #2-#26 共 25 个建议待排期（#1 QR Code 已落地），本次不重复展开 |
+| 用户反馈 | Formspree 后台内容连续三期未导出，已成为持续性待办 |
+
+### 二、新功能建议（5 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 27 | Email Auth Record Studio（SPF/DKIM/DMARC/BIMI 记录生成器） | Newsletter 发信防进垃圾箱 | 纯前端（DNS TXT 记录拼装） | **高** |
+| 28 | LLM API Cost Calculator（大模型调用成本计算器） | 给 AI 功能定价、控成本 | 纯前端（价格表 + 公式） | **中高** |
+| 29 | Cookie Consent Banner Generator（Cookie 同意横幅生成器） | 上线合规、配合隐私政策 | 纯前端（生成 vanilla JS 片段） | **中高** |
+| 30 | Security Headers & CSP Studio（安全响应头/CSP 生成器） | 站点安全加固、安全评分 | 纯前端（输出 vercel.json 等配置） | 中 |
+| 31 | llms.txt Studio（AI 可读站点说明生成器） | AI 搜索时代的"新 SEO" | 纯前端（Markdown 拼装） | 中 |
+
+#### 27. Email Auth Record Studio（SPF / DKIM / DMARC / BIMI 记录生成器）— 高
+- **场景**：OPC 用 Resend/Postmark/Mailgun 给订阅用户发 newsletter，Google/Yahoo 自 2024 年起强制批量发件人（每天 >5000 封）配置 SPF/DKIM/DMARC，否则直接进垃圾箱或被拒；一个人看着 DNS 后台的 TXT 记录一脸懵，不知道 p=none/quarantine/reject 怎么渐进切换。
+- **核心能力**：分步向导——① 输入域名 + 发信服务商（预设 Resend/Postmark/Mailgun/SendGrid/Beehiiv 的 include 片段）生成 SPF 记录（含 10 次 DNS 查询上限检测）；② DKIM 记录表单（selector + 公钥粘贴，校验格式）；③ DMARC 记录可视化构建（p/rua/ruf/pct/adkim/aspf 每个 tag 带解释，提供 none→quarantine→reject 的 90 天渐进路线建议）；④ 可选 BIMI（品牌 Logo 邮件头像）记录；输出"主机记录/记录类型/记录值"三列表，直接照填 Cloudflare/Vercel DNS。
+- **技术可行性**：纯前端字符串拼装，零依赖。验证功能（查域名实际记录）可选做 serverless DNS-over-HTTPS 查询，首期不做。
+- **参考产品**：EasyDMARC、MXToolbox DMARC Generator、SmartReach 免费生成器。
+- **理由**：newsletter 是 OPC 核心获客渠道（#18 邮件标题分析、#22 发票都在这条链上），而 DNS 记录配置是发信链路中最容易翻车、搜索意图极强的一环；2026 年 Google/Microsoft 进一步收紧，需求只增不减；纯前端、开发量小、与 #16 Sitemap Studio 同属"上线配置类"工具家族。
+
+#### 28. LLM API Cost Calculator（大模型调用成本计算器）— 中高
+- **场景**：OPC 给产品加 AI 功能（或用 API 批量跑内容），需要在 OpenAI / Claude / Gemini 多个模型间算账："每天 1000 个用户、每人 2000 input + 800 output tokens，一个月多少钱？缓存命中能省多少？"；#15 Prompt Studio 解决"写"，本工具解决"算钱"。
+- **核心能力**：模型选择器（内置主流模型 input/output/cached 价格表，按厂商分组）；输入预估 tokens、输出 tokens、日活/月请求量、缓存命中率；实时算单次成本、日成本、月成本；多模型并排对比（同一用量下 GPT vs Claude vs Gemini 差价）；盈亏平衡提示（"你的 $9/月订阅需要每用户每天 <X 次调用才不亏"）。
+- **技术可行性**：纯前端。价格表写死在 JS 中，需在页面标注价格更新日期并建立每月人工核对机制（模型调价频繁，这是主要维护成本）。
+- **参考产品**：tokencalculator.app、ai-toolbox.co token counter、各家官方 pricing calculator。
+- **理由**：2026 年 OPC 产品几乎都嵌 AI，定价前必须算清单位经济模型，这是"收钱运营"环节的新刚需；与 #15 Prompt Studio 天然联动（prompt 页直接显示这段 prompt 的调用成本）；竞品多为单模型计算器，多厂商对比 + 盈亏平衡视角有差异化。
+
+#### 29. Cookie Consent Banner Generator（Cookie 同意横幅生成器）— 中高
+- **场景**：OPC 站点加了 Plausible/GA、广告像素或 Stripe，面向欧洲用户就需要 Cookie 同意横幅；CookieYes/Termly 免费层有页面浏览量上限且带品牌水印，独立站主要么手写 JS 要么付费。
+- **核心能力**：表单配置横幅文案、位置（顶部/底部）、按钮（Accept/Reject/Preferences）、配色（与 #20 配色工具呼应）、语言；生成一段 <10KB 无依赖 vanilla JS（同意前阻止非必要脚本、localStorage 记录选择、可选简单偏好中心）；实时预览；一键复制。与 #21 Legal Pages Studio 互相跳转（横幅页脚链接到生成的 Cookie Policy）。
+- **技术可行性**：纯前端代码生成器，生成的 JS 也是零依赖的，符合 WeUtil 自身技术哲学。
+- **参考产品**：CookieYes、Termly、PieEye、policygen.dev（开源，<10KB + preference center）、cookiebannergenerator.com。
+- **理由**：与 #21 法律页面是同一合规工作流的两半（政策文本 + 前端横幅），建议作为"合规套件"前后脚落地；竞品免费层普遍带水印/限额，"生成自有代码、无水印、无浏览量上限"是明确卖点；policygen.dev 已验证"开源 + 免注册"路线成立。
+
+#### 30. Security Headers & CSP Studio（安全响应头 / CSP 生成器）— 中
+- **场景**：OPC 上线后想在 securityheaders.com 拿 A+ 评分、通过安全扫描，但不懂 CSP 指令；尤其 WeUtil 这类纯静态 + Vercel 部署，需要知道配置写在 vercel.json 的 headers 字段里。
+- **核心能力**：可视化勾选 HSTS、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy；CSP 构建器（script-src/style-src/img-src/connect-src 等指令 + 域名白名单 chips + nonce/hash 辅助，unsafe-inline/unsafe-eval 风险警告 + 安全评分）；输出多平台配置：vercel.json headers、Netlify _headers、Nginx、Apache、Cloudflare；Report-Only 模式建议。
+- **技术可行性**：纯前端。可选 serverless 抓取目标站现有响应头做检测（复用 api/proxy.js），首期只做生成不做检测。
+- **参考产品**：ZeroTool CSP Generator、DevBolt Security Headers、securityheaders.com、ScanSuite。
+- **理由**：同类工具站已把它列为标配品类（ZeroTool 主打 100% client-side），需求验证充分；"直接输出 vercel.json 片段"对 Vercel 用户群体（WeUtil 自身用户画像高度重合）是差异化；WeUtil 自己也能 dogfood；开发量中等（CSP 校验逻辑是主要工作量）。
+
+#### 31. llms.txt Studio（AI 可读站点说明生成器）— 中
+- **场景**：2026 年 AI 搜索（ChatGPT search、Perplexity、Claude）带来新流量入口，llms.txt 被称为"AI 时代的 robots.txt"——放在站点根目录，告诉 AI agent 这个站是做什么的、哪些页面最重要；2026 年 5 月 Chrome Lighthouse 新增 Agentic Browsing 审计项检查它，而 top 1000 网站仅 0.3% 部署，存在早期红利。
+- **核心能力**：表单填写站点名/简介/主要链接（标题 + URL + 描述列表，可增删拖拽排序）/可选 llms-full.txt；按 llmstxt.org v2 规范生成 Markdown；实时预览 + 校验（H1 标题、引用块摘要、链接列表格式）；顺带生成 HTML `<link rel="describedby">` 标签；下载 llms.txt。
+- **技术可行性**：纯前端 Markdown 模板拼装，零依赖。
+- **参考产品**：mintlify、brandcited.ai、mindtrixai、Firecrawl 的 llms.txt generator。
+- **理由**：与 #16 Sitemap/Robots Studio 是同一工作流（"给爬虫看的文件"家族），建议后者落地时直接把 llms.txt 作为第三个 tab；AI 搜索优化（GEO/AEO）是 2026 年 SEO 内容的最大增量话题，早期工具页有长尾流量红利；注意需如实标注"llms.txt 仍是社区提案而非正式标准，Google 官方未承诺优待"。
+
+### 三、现有工具增强建议
+
+1. **上线合规套件应打包做**：#21 Legal Pages + #29 Cookie Banner + #27 Email Auth 三个工具覆盖"收款合规 + 访客合规 + 发信合规"，页面间互相导流、共用"产品名/域名/联系方式"输入（localStorage 共享一份站点 profile，填一次三个工具复用），体验上会明显强于零散竞品。
+2. **#15 Prompt Studio 与 #28 Cost Calculator 合并设计**：Prompt Studio 的 token 计数区可直接挂成本估算（选模型即显示这段 prompt 单次/千次成本），Cost Calculator 做独立页承接 SEO 流量，两者共用 token 估算内核。
+3. **#16 Sitemap Studio 落地时直接纳入 llms.txt**：robots.txt / sitemap.xml / llms.txt 三个"根目录文件"一个工具生成，避免重复立项 #31。
+4. **首页 Trend Radar 卡片描述过期问题连续三期未修**：仍写 5 个源，实际 9 个源；属一行文案改动，建议下次任何代码改动时顺手修掉。
+5. **Trend Radar AI 中文早报连续四期未落地**：仍是全站差异化最大的 feature，建议优先级高于任何新工具。
+
+### 四、趋势与新视角
+
+- **邮件认证从"最佳实践"变成"强制基础设施"**：Google/Yahoo/Microsoft 2024-2026 持续收紧批量发件人要求，SPF/DKIM/DMARC 不配就进垃圾箱；OPC 把 newsletter 当核心获客渠道，DNS 记录生成是确定性刚需，且老牌工具（MXToolbox 等）界面陈旧、广告密集，干净的新工具有机会。
+- **AI Readiness 成为新 SEO 品类**：llms.txt 2026 年上半年采用率增长约 6 倍、进入 Lighthouse 审计，GEO（生成引擎优化）内容爆发；虽然 Google 官方表态矛盾（一边说不依赖 llms.txt，一边 Lighthouse 审计它），但"低成本、早期红利、与 sitemap 同源"使它值得做。
+- **AI 成本透明化工具走热**：模型定价越来越复杂（input/output/cached/batch 四种价格 × 十几个模型 × 频繁调价），做 AI wrapper 的 OPC 第一周就需要算账工具；这类工具的护城河是价格表维护速度，WeUtil 需接受月度更新成本。
+- **合规工具的竞品正在"开源化 + 免注册化"**：policygen.dev 把隐私政策 + Cookie 横幅做成开源免注册，验证了 WeUtil 同款打法可行；同时说明这个窗口不会一直开着，#21/#29 建议尽早落地占位。
+- **安全头生成器已成工具站标配**：ZeroTool、DevBolt、ScanSuite 等多家 2026 年新品都主打"100% client-side CSP 生成"，需求真实但拥挤；WeUtil 的切入点只能是 Vercel/Netlify 静态站部署配置 + 与上线工具箱联动，不建议做通用安全扫描平台。
+
+### 五、待验证
+
+- DMARC 报告解析（rua 聚合报告是 XML 压缩包邮件）是否值得做第二期功能——可做纯前端拖拽上传解析，帮助用户看懂谁在伪造发信。
+- LLM 价格表的维护机制：需要确认每月人工更新一次的成本可接受，或是否有公开价格 JSON API 可 serverless 拉取。
+- llms.txt v2 规范的最终格式细节（rel="describedby" 等）在落地前需再读一次 llmstxt.org 最新版。
+- Formspree 后台用户反馈连续三期未导出，强烈建议本周人工查看。
