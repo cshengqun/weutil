@@ -1,0 +1,17 @@
+# WeUtil
+
+> WeUtil is a free online toolbox for one-person companies (OPC): solo developers, indie hackers and solopreneurs who build, ship and grow products alone. No signup, no install — every tool runs in your browser and keeps your data local.
+
+## Overview
+
+WeUtil covers the full one-person company workflow: find direction, build the product, create content to get users, get paid, and automate. All tools are free, privacy-first and work entirely in the browser.
+
+## Important URLS
+
+- [Home](https://weutil.top/): WeUtil landing page with all tools
+- [Trend Radar](https://weutil.top/trends): Daily aggregation of signals from GitHub Trending, Hacker News, Lobsters, Hugging Face, arXiv, Product Hunt, YouTube, X and Google Trends — built for one-person companies to spot what's rising
+- [JSON Lab](https://weutil.top/json): Format, minify, validate and diff JSON data
+- [Epoch Lab](https://weutil.top/timestamp): Convert between Unix timestamps and human-readable dates
+- [HTTP Client](https://weutil.top/http): Send API requests, import cURL commands and inspect responses
+- [QR Code Studio](https://weutil.top/qrcode): Generate QR codes for links, WiFi, vCard, email, phone and SMS, with custom colors, logos and PNG/SVG export
+- [Feedback](https://weutil.top/feedback): Report bugs or suggest features for WeUtil
