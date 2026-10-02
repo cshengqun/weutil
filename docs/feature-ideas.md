@@ -465,3 +465,87 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 - LLM 价格表的维护机制：需要确认每月人工更新一次的成本可接受，或是否有公开价格 JSON API 可 serverless 拉取。
 - llms.txt v2 规范的最终格式细节（rel="describedby" 等）在落地前需再读一次 llmstxt.org 最新版。
 - Formspree 后台用户反馈连续三期未导出，强烈建议本周人工查看。
+
+---
+
+## 2026-10-02
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client、QR Code Studio、Trend Radar（9 源 serverless）、Feedback |
+| 自上次探索以来变更 | 新增 **llms.txt**（commit eeac7c8，#31 的静态文件部分已落地；#31 建议的"llms.txt 生成器工具页"未做） |
+| 候选池 | #2-#30 共 29 个建议待排期；#1 QR Code、#31 静态 llms.txt 已落地 |
+| 待用户拍板 | 各页面 `<head>` 是否加 `<link rel="describedby" href="/llms.txt">`（10/1 已提议，未答复） |
+| 用户反馈 | Formspree 后台内容连续四期未导出 |
+
+### 二、新功能建议（5 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 32 | MCP Config Studio（MCP 客户端配置生成/合并/校验器） | 给 AI 编程工具接 MCP server | 纯前端 | **中高** |
+| 33 | .gitignore Generator | 新建仓库、防泄露密钥 | 纯前端（模板内嵌） | **中高** |
+| 34 | JSON → Types Studio（JSON 转 TS/Zod/Go/Python 类型） | 对接 API 快速出类型 | 纯前端 | 中 |
+| 35 | Redirect Rules Generator（多平台重定向规则生成器） | 改版/迁移保 SEO | 纯前端 | 中 |
+| 36 | RSS / Atom Feed Generator | 博客/newsletter/播客分发 | 纯前端 | 中低 |
+
+#### 32. MCP Config Studio（MCP 客户端配置生成 / 合并 / 校验器）— 中高
+- **场景**：OPC 用 Claude Desktop、Cursor、VS Code（Copilot）、Claude Code、Windsurf 等多个 AI 编程客户端，每接一个 MCP server（GitHub、Postgres、filesystem、Playwright…）都要手写 JSON；各客户端格式还不一样（VS Code 用 `servers` 且要显式 `"type": "stdio"`，其余用 `mcpServers`），改错一个客户端就看不到 server；已有配置时手工合并容易把现有 server 改坏。
+- **核心能力**：① 可视化表单添加 server（command/args/env，env 值用 `${TOKEN}` 占位符避免泄露真实密钥）；② 一键切换目标客户端，输出对应格式与文件路径（含 macOS/Windows 路径提示）；③ **导入现有配置 → 合并新 server → 输出完整配置**（差异化核心，竞品普遍只做从零生成）；④ 校验：重复 server 名、缺失 command、VS Code 缺 type 字段、Windows 路径转义等问题给出错误定位；⑤ 内置常见 server 预设（filesystem/github/postgres/playwright/puppeteer 等 npx 命令模板）。
+- **技术可行性**：纯前端 JSON 拼装与校验，零依赖。
+- **参考产品**：mcpserverspot.com Config Generator、dev-toolbox.tech MCP Config Generator、ctxlint（MCP 配置 lint 规范，9/30 刚发布）、miftah 多客户端预设。
+- **理由**：9/30 文档把"MCP 配置生成器"列为观察 1-2 周的方向，观察窗口已到——本周调研发现该品类正在快速成型（多家工具站 4-9 月集中上线，9/30 还出现了专门的配置 lint 规范），说明需求被验证且尚未出现垄断者；MCP 已是 2026 年 agent 时代的事实标准接口，OPC 人人都在配；WeUtil 用户画像（一个人用 AI 写代码的开发者）与该工具高度重合，是 agent 时代的"上线配置类"新成员。
+
+#### 33. .gitignore Generator — 中高
+- **场景**：OPC 每周开新仓库（产品、landing page、小工具），初始化时需要 .gitignore；手写容易漏掉 `.env`、`.vercel`、`node_modules`、IDE 文件，把密钥或构建产物提交上去是独立开发者最高频的事故之一。
+- **核心能力**：勾选语言/框架/IDE/OS（Node、Python、Go、Rust、React、Next.js、Vite、VS Code、JetBrains、macOS、Windows、Vercel、Terraform、Docker…），合并模板、去重、分区注释；自定义规则追加；**密钥泄露风险提示**（当自定义规则或检测到 .env 模式时高亮警告）；一键复制/下载。模板全部内嵌在页面 JS 中（基于 GitHub gitignore 模板，离线可用、无外部请求）。
+- **技术可行性**：纯前端，模板文本内嵌，零依赖。
+- **参考产品**：gitignore.io / Toptal、iotools.cloud、genx.tools、alexandrai.org（均主打 in-browser）。
+- **理由**："gitignore generator" 是开发者工具领域搜索量最大的常青词之一，SEO 价值高；竞品虽多但格局稳定（gitignore.io 依赖服务端且已多次宕机/跳转，新生工具站普遍把它作为标配引流页），WeUtil 以"模板内嵌零外部请求 + 密钥泄露警告"切入；开发量极小，适合作为引流工具快速上线。
+
+#### 34. JSON → Types Studio（JSON 转多语言类型 / Zod Schema）— 中
+- **场景**：OPC 对接第三方 API（支付、AI、趋势数据），拿到一段 JSON 响应后要手写 TypeScript interface 或 Zod 校验 schema，嵌套层级一多又烦又容易错；#3 JSON Lab 解决"看 JSON"，本工具解决"用 JSON 写类型"。
+- **核心能力**：粘贴 JSON → 推断类型（嵌套对象拆分为独立 interface、数组元素类型、null 合并为联合类型、混合数组出 union）；输出切换：TypeScript interface / type alias、**Zod v3/v4 schema**（2026 年 TS 运行时校验事实标准）、Go struct、Python dataclass/TypedDict；可设根类型名、可选字段处理；复制/下载 .ts 文件。
+- **技术可行性**：纯前端递归类型推断，零依赖。
+- **参考产品**：quicktype（行业标杆但 UI 重、加载慢）、jsonic.io、jsmanifest（TS+Zod）、jsontooncraft、utilokit。
+- **理由**："json to typescript" 搜索意图明确、竞品验证充分；差异化在多语言 + Zod 双版本 + 与 JSON Lab 互相导流（JSON Lab 加"Generate Types"按钮，本工具作为独立页承接 SEO）；开发量中等，类型推断边界 case（null/空数组/枚举）是主要工作量。
+
+#### 35. Redirect Rules Generator（多平台重定向规则生成器）— 中
+- **场景**：OPC 改版 landing page、给 URL 做 SEO 规范化（.html → clean URL）、换域名或迁移部署平台时，需要批量 301；规则语法 Vercel（vercel.json）、Netlify（_redirects/netlify.toml）、Cloudflare、Apache .htaccess、Nginx 各不相同，写错一条旧链接就 404，流失来之不易的搜索流量。
+- **核心能力**：表格录入旧路径→新路径（支持粘贴 CSV 两列批量导入）；常用预设（www→apex、http→https、去尾斜杠、SPA fallback /* → /index.html 200、整域迁移通配符）；301/302/rewrite(200) 选择；通配符 `:path*` / `:splat` / `$1` 跨平台映射；同时输出 vercel.json、_redirects、netlify.toml、.htaccess、Nginx 五种配置；规则冲突/重复检测。
+- **技术可行性**：纯前端字符串模板，零依赖。
+- **参考产品**：zerodeploy.dev _redirects Generator（9/27 刚上线）、wutools 重定向规则生成器、Vercel/Netlify 官方迁移文档。
+- **理由**：与 #30 Security Headers/CSP Studio 输出同一份 vercel.json，建议组成"Deployment Config Studio"家族（同一套表单外壳、共享站点 profile）；WeUtil 自己就经历过 .html → clean URL 迁移，可直接 dogfood；竞品刚出现（9/27）说明需求开始被注意到，趁早占位；属"做产品/收钱运营"阶段的低频高痛场景。
+
+#### 36. RSS / Atom Feed Generator — 中低
+- **场景**：OPC 写博客或做播客做内容获客，静态站（手写 HTML/Astro/Hugo 初期）没有自动 feed；newsletter 作者也越来越多需要把内容转 RSS 供聚合器收录（2026 年 RSS 复兴，RSSHub、Folo、Kill the Newsletter 等项目热度上升）。
+- **核心能力**：填写频道元信息（title/link/description/语言/封面/作者）+ 文章列表（标题/链接/摘要/发布时间/分类），输出合法 RSS 2.0 与 Atom 1.0（自动 XML 转义、RFC 822/RFC 3339 日期、GUID）；可选 iTunes/podcast 标签扩展（音频 URL、时长、season/episode，可直接提交 Apple Podcasts/Spotify）；实时校验 + 下载。
+- **技术可行性**：纯前端 XML 拼装，零依赖。
+- **参考产品**：iotools.cloud RSS/Atom Generator（9/30 刚上线）、abacktools 播客 feed 生成器、rss.app（托管型，收费）。
+- **理由**：与 #16 Sitemap、#31 llms.txt 同属"站点分发文件"家族，建议在 Sitemap Studio 落地时作为第四个 tab 一起做，不单独立项；需求真实但搜索量和频次低于前几个，故中低优先级；播客 RSS（iTunes 标签）是差异化点，多数免费生成器不含。
+
+### 三、现有工具增强建议
+
+1. **#31 状态更新**：llms.txt 静态文件已上线（https://weutil.top/llms.txt），但两件事未完成——① 各页面 `<head>` 的 `<link rel="describedby">` 待用户拍板；② llms.txt 生成器工具页未做（可并入 #16 Sitemap Studio，届时 #31/#36 一并落地）。
+2. **部署配置家族化**：#30 Security Headers + #35 Redirect Rules 都输出 vercel.json，建议合并为一个 "Deploy Config Studio"（tab 切换 Headers / Redirects / 未来的 CORS），共享站点 profile，避免两个工具各生成半份配置让用户手工拼。
+3. **#34 作为 JSON Lab 的延伸入口**：JSON Lab 工具栏加 "To Types" 跳转，类型推断内核未来还可支撑 JSON→JSON Schema→Mock Data（与 #19 Fake Data Generator 联动）。
+4. **首页 Trend Radar 卡片描述过期问题连续第四期未修**（仍写 5 个源，实际 9 个）；README 的 Project Structure 也未收录 trends.html、api/、llms.txt。建议任何一次代码改动顺手修掉。
+5. **Trend Radar AI 中文早报连续五期未落地**，仍是全站差异化最大的 feature，优先级高于任何新工具。
+
+### 四、趋势与新视角
+
+- **MCP 工具链开始"配置层" consolidation**：2026 上半年 MCP 生态在铺 server 数量，9 月起明显转向开发者体验层——配置生成器（mcpserverspot、dev-toolbox）、多客户端格式转换（miftah）、配置 lint 规范（ctxlint，9/30）集中出现；各客户端配置格式不统一（`mcpServers` vs `servers`、stdio 显式声明）是真实痛点，类似早期 .editorconfig/ESLint 配置混乱期，WeUtil 此时进场正当时。
+- **GEO（生成引擎优化）工具登上 Product Hunt**：9/24 PH 榜单出现 jev（开源 Rust 写的 SEO/GEO 审计 CLI），与昨天记录的 llms.txt 进 Lighthouse 审计互相印证——"让 AI 搜到并引用你的站"正在形成工具品类；WeUtil 的 llms.txt 已占位第一步，后续可观察纯前端 GEO 审计页（检查 llms.txt、结构化数据、标题可引用性）的机会，但该方向需要 serverless 抓取，暂列观察。
+- **PH 9 月月榜主题：给 AI agent 卖铲子**——tiun（AI builder 的 auth/billing/支付）、Creem（支付）、Mastra（agent 框架）、Context.dev（抓取 API）、多家 voice agent 测试工具；OPC 工具站的选品启示：agent 基础设施周边的"配置/算账/合规"小工具（#28 LLM 成本、#32 MCP 配置）需求持续走强。
+- **常青引流页仍是工具站流量基本盘**：.gitignore、JSON→TS、时间戳这类高频小词页面是各家工具站（iotools、abacktools、kordu、genx）2026 年仍在持续新增的品类，开发成本低、SEO 长尾稳定；WeUtil 目前这类常青页偏少（仅 timestamp/json），#33/#34 应优先补齐。
+- **RSS 低调复兴**：newsletter→RSS、播客分发、RSSHub 5000+ 路由、Folo 等 AI reader 带动 feed 需求，iotools 9/30 上线 feed 生成器；属慢热方向，跟随 sitemap/llms.txt 家族一起做即可。
+
+### 五、待验证
+
+- MCP 各客户端 2026 年 10 月最新配置格式（尤其 VS Code `servers` 根键、Claude Code 的配置位置），落地 #32 前需对照官方文档核实一次。
+- GEO 审计纯前端可行性：浏览器端 fetch 任意站点受 CORS 限制，可能必须走 api/proxy.js；若做需评估缓存与限流。
+- .gitignore 模板内嵌的体积与更新机制（GitHub 模板库约百级文件，全量内嵌体积可控但需定期同步）。
+- Formspree 后台用户反馈连续四期未导出，强烈建议本周人工查看。
