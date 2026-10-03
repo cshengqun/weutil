@@ -549,3 +549,86 @@ git 历史显示团队偏好：频繁打磨单工具细节、坚持干净的全�
 - GEO 审计纯前端可行性：浏览器端 fetch 任意站点受 CORS 限制，可能必须走 api/proxy.js；若做需评估缓存与限流。
 - .gitignore 模板内嵌的体积与更新机制（GitHub 模板库约百级文件，全量内嵌体积可控但需定期同步）。
 - Formspree 后台用户反馈连续四期未导出，强烈建议本周人工查看。
+
+---
+
+## 2026-10-03
+
+### 一、现状盘点
+
+| 状态 | 内容 |
+|---|---|
+| 已上线（main） | JSON Lab、Epoch Lab、HTTP Client、QR Code Studio、Trend Radar（9 源 serverless）、Feedback、llms.txt |
+| 自上次探索以来代码变更 | 无（最新 commit 6e16acb 为 10/2 docs） |
+| 候选池 | #2-#30、#32-#36 待排期；#1、#31 静态文件已落地 |
+| 用户反馈 | Formspree 后台内容连续五期未导出 |
+
+### 二、新功能建议（5 个）
+
+汇总：
+
+| # | 功能 | OPC 场景 | 技术可行性 | 优先级 |
+|---|---|---|---|---|
+| 37 | AGENTS.md Studio（AI 编程指令文件生成器） | 让 AI agent 按你的规范写代码 | 纯前端 | **高** |
+| 38 | .env Inspector（环境变量检查/脱敏/多格式转换） | 防密钥泄露、配置多平台部署 | 纯前端 | **中高** |
+| 39 | PWA Manifest & Icon Studio | 站点可安装到手机/桌面 | 纯前端（Canvas 裁图） | 中 |
+| 40 | Waitlist Page Generator（候补着陆页生成器） | 写代码前验证需求、收邮箱 | 纯前端（下载单 HTML） | 中 |
+| 41 | Open Source License Picker | 新仓库选协议、生成 LICENSE | 纯前端 | 低（建议打包） |
+
+#### 37. AGENTS.md Studio（AI 编程指令文件生成器）— 高
+- **场景**：OPC 用 Claude Code、Cursor、Codex、Copilot、Windsurf、Jules 等多个 AI 编程工具，但每个 agent 对项目的理解全靠根目录的指令文件——写得好，生成的代码像自己写的；写不好，全是要返工的通用模板。AGENTS.md 已成为跨工具事实标准（2026 年中 28+ 工具自动读取，OpenAI Codex 发起），但多数人不知道该写哪些小节、各工具还要不要单独的 CLAUDE.md。
+- **核心能力**：① 引导式表单：技术栈、安装/构建/测试/lint 命令（可点"我不确定"给出常见命令占位）、目录结构、代码规范、commit 规范、always/never 规则块、安全约束；② 一次生成三份文件：**AGENTS.md**（跨工具通用）、**CLAUDE.md**（`@AGENTS.md` 引入 + Claude 专属说明）、`.cursor/rules` 片段；③ 支持反向：粘贴现有 AGENTS.md 做结构体检（缺哪些必备小节、命令是否写全）；④ 常见项目模板预设（Vite/Next/静态站/Vercel serverless，WeUtil 自身配置可作为"纯静态无构建"样板）。
+- **技术可行性**：纯前端 Markdown 模板拼装，零依赖。
+- **参考产品**：agents-md-generator（CLI，扫描代码生成）、spike-init（CLI，实际跑命令验证后写文件）、bal.pe.kr/tools/agentsmd（指南+生成器）、env.dev dark-factory 指南。
+- **理由**：现有方案几乎全是 CLI（要求先有代码、会命令行），**面向"还没写代码/不想装 CLI"的浏览器表单生成器是空白**；与昨天的 #32 MCP Config 同属"agent 时代的项目配置"家族，与 llms.txt（给内容 agent 看）形成对仗——AGENTS.md 是给编程 agent 看的，WeUtil 有机会把"agent 可读文件"这个新品类做全；用户画像 100% 重合，纯前端开发量小。
+
+#### 38. .env Inspector（环境变量检查 / 脱敏 / 多格式转换）— 中高
+- **场景**：OPC 的项目塞满 API key（WeUtil 自己就有 GITHUB_TOKEN、PRODUCTHUNT_TOKEN、YOUTUBE_API_KEY），日常三大事故：① 把 .env 提交到 GitHub；② 给协作者/AI 贴配置时连密钥一起贴出去；③ 同一套变量要在 Vercel、GitHub Actions、Docker Compose 之间手抄三遍。
+- **核心能力**：① 粘贴 .env → 语法校验（重复 key、缺值、空格/引号问题）；② **密钥识别**：20+ 服务商 key 模式正则（AWS/GitHub/Stripe/Slack/OpenAI/Anthropic/SendGrid/Twilio 等）+ 通用 SECRET/TOKEN/PASSWORD 模式，高亮风险；③ 一键生成脱敏的 .env.example（保留 key、注释、分组顺序，非敏感默认值如 NODE_ENV/PORT 可保留）；④ 格式互转：docker-compose.yml、Kubernetes ConfigMap、GitHub Actions secrets env、Vercel CLI、shell export；⑤ 明确"零网络请求"隐私承诺（页面可放网络面板自检说明，devbit.dev 已用此作卖点）。
+- **技术可行性**：纯前端正则 + 字符串转换，零依赖。
+- **参考产品**：devbit.dev ENV Inspector、env.dev（Builder/Converter/Validator 三件套，9/27 更新）、iotools API Secret Scanner（9/17）、altftool、envtools.dev、crenvex（CLI）。
+- **理由**：2026 年 8-9 月至少 6 家工具站集中上线同类功能，品类正在快速成型且无垄断者；"密钥泄露"是 OPC 最高频、代价最大的事故之一，隐私本地处理与 WeUtil 定位完全一致；与 #33 .gitignore 天然联动（生成 .gitignore 时提醒 .env 规则）。
+
+#### 39. PWA Manifest & Icon Studio — 中
+- **场景**：OPC 想让自己的工具站/产品能"添加到主屏幕"、像原生 App 一样全屏运行（WeUtil 自身也适合 PWA 化），但 manifest.json 字段琐碎（short_name 12 字符限制、display 模式、theme/background color、maskable 图标安全区），图标还要切 192/512/apple-touch-icon 等多个尺寸。
+- **核心能力**：表单生成 manifest.json（名称、short_name、start_url、display、orientation、颜色、categories、shortcuts）；**上传一张 Logo，浏览器 Canvas 本地生成全套图标**（192/512/maskable 带安全区预览/apple-touch-icon-180/favicon 联动）；实时手机桌面预览；输出 `<link rel="manifest">` 与 iOS 私有 meta 标签；可选最简 service worker（离线缓存壳）代码片段；打包下载。
+- **技术可行性**：纯前端，Canvas 裁图零依赖；service worker 只输出静态模板字符串。
+- **参考产品**：iotools PWA Manifest Generator（10/2 刚上线）、codeshack（含 Icon Resizer）、octawebtools PWA Maker（ZIP 包）、nativeappai、wutools。
+- **理由**：iotools 昨天（10/2）刚上线同类，验证需求仍在被持续补齐；图标裁切引擎与 #9 Favicon Studio 完全共用，建议作为"应用图标家族"二期一起做（Favicon 面向浏览器标签页，PWA 面向安装），一套 Canvas 内核两个引流页；开发量主要在图标安全区预览。
+
+#### 40. Waitlist Page Generator（候补 / Coming Soon 着陆页生成器）— 中
+- **场景**：OPC 验证新想法的标准动作是先上一个 waitlist 页收邮箱，再决定写不写代码（#17 Launch Checklist 的前置环节）；但 Carrd 要托管账号、AI landing builder 要月费，而 OPC 想要的是一个能丢到 Vercel/Cloudflare Pages 的单文件。
+- **核心能力**：表单填写产品名、一句话价值主张、3 个卖点、邮箱表单 endpoint（预设 Formspree/Formgrid/Waitlister 接入格式——WeUtil feedback 页已在用 Formspree，可直接 dogfood 同款流程）、倒计时（可选上线日期）、配色（复用 #20 配色思路）、社交链接；实时预览；**下载一个自包含 index.html**（内联 CSS/JS、零依赖、含成功态、基础 OG 标签位）；暗色/亮色两版。
+- **技术可行性**：纯前端代码生成器，零依赖。
+- **参考产品**：Carrd（托管）、Waitlister、Mixo（$9/月 AI builder）、formgrid.dev 静态 waitlist 教程、V0 waitlist 模板（Next.js 重栈）。
+- **理由**：竞品要么收费托管、要么给的是 Next.js/shadcn 重栈，"生成一个零依赖单 HTML 文件、免费部署到 Vercel"正好是 WeUtil 技术哲学的差异化；与 #10 OG Image、#11 Meta Preview、#17 Launch Checklist 构成完整"发布前"链路；注意避免做成通用 landing page builder（范围会失控），只做 waitlist 单一场景。
+
+#### 41. Open Source License Picker（开源协议选择器 / LICENSE 生成器）— 低（建议打包不立项）
+- **场景**：OPC 开源 side project 时不知道 MIT/Apache 2.0/GPL/MPL 的区别，仓库里没有 LICENSE 文件。
+- **核心能力**：问卷式选择（要不要商用/改作是否必须开源/是否要专利授权）→ 推荐协议（权限/条件/限制三栏对比）→ 填版权人/年份生成完整 LICENSE 文本下载。
+- **技术可行性**：纯前端文本模板，零依赖。
+- **参考产品**：choosealicense.com（GitHub 官方，流量垄断）、toolszone、toolsvana、neotoolkit、stackutils 等 10+ 家。
+- **理由**：品类极度拥挤且 GitHub 官方站占据垄断流量，单独立页 SEO 胜算低；但它是"新仓库四件套"之一，**强烈建议不单独立项，而是与 #33 .gitignore + #37 AGENTS.md + #38 .env.example 打包成 "Repo Bootstrap Kit"**：一个入口、一份项目信息表单，最后打包下载 .gitignore / LICENSE / AGENTS.md / .env.example 四个文件——这个"打包一次配齐"的组合是任何单一竞品都没做的差异化。
+
+### 三、现有工具增强建议
+
+1. **战略建议：做 "Repo Bootstrap Kit" 套件**（#33 + #37 + #38 + #41）：新仓库初始化是 OPC 最高频动作，四个文件共享一份"项目信息"（项目名、技术栈、作者、年份），一个向导走完、打包下载；四个子工具各自保留独立页面承接 SEO 长尾，套件页承接 "new repo setup / project bootstrap" 词。这是本期最重要的产品化建议。
+2. **#39 与 #9 Favicon Studio 共用图标内核**：Canvas 缩放/圆角/maskable 安全区一套代码两个页面，落地顺序建议先 #9 后 #39。
+3. **#40 与 #17 Launch Checklist 联动**：Checklist 的"发布前"步骤直接链接到 Waitlist Generator、#10 OG、#11 Meta、#16 Sitemap，形成发布工具链闭环。
+4. **WeUtil 自身 dogfood**：#37 生成的 AGENTS.md、#39 的 PWA manifest 都可以直接用在 weutil 仓库和 weutil.top 上，生成后即真实案例。
+5. **首页 Trend Radar 卡片描述过期问题连续第五期未修**（仍写 5 源，实际 9 源）；README Project Structure 未收录 trends.html、api/、llms.txt；**AI 中文早报连续六期未落地**，仍建议优先级高于新工具。
+
+### 四、趋势与新视角
+
+- **"Agent 可读文件"成为新文件品类**：2026 年中 AGENTS.md 获 28+ AI 编程工具支持（Codex/Copilot/Cursor/Windsurf/Claude Code/Jules），与 llms.txt（给内容/搜索 agent）、MCP 配置（给 agent 接工具）共同构成"agent-facing project files"新品类；传统工具站还在做给人看的文件，WeUtil 可以系统性地做"给 agent 看的文件"工具线（llms.txt 已占位第一格，AGENTS.md、MCP 配置紧随其后），这是与 it-tools 类老工具站差异化的清晰主线。
+- **密钥卫生工具集中爆发**：8-9 月至少 6 家工具站上线 .env 脱敏/密钥扫描类功能（devbit、env.dev、iotools、altftool、envtools、crenvex CLI），背景是 OPC 项目 API key 数量随 AI 服务激增、GitHub 密钥泄露自动化扫描攻击产业化；"本地处理、零上传"是该品类共同卖点，与 WeUtil 隐私定位天然契合。
+- **Waitlist-first 仍是 OPC 方法论主流**：2026 年的教程（formgrid、findclout、Waitlister）全部指向"静态单页 + 表单后端（Formspree/Formgrid/D1）"架构，零后端 waitlist 页的技术门槛已降到最低，门槛只剩"写页面"——正是生成器的机会。
+- **PWA 品类回温**：10/2 iotools 上线 manifest 生成器、9 月 octawebtools/nativeappai 等多家刷新同类工具，移动端"添加到主屏幕"与 iOS 18+ 对 PWA 的持续开放让该需求稳定存在；但属常青工具而非爆发品类，跟随 Favicon 一起做即可。
+- **CLI 与网页工具的分工明确化**：AGENTS.md、.env.example 的现有方案多为 CLI（要求有代码仓库和命令行环境），浏览器表单工具覆盖的是"起项目前/非技术协作者/不想装工具"的场景——WeUtil 不与 CLI 竞争，吃浏览器端的即时使用与搜索流量。
+
+### 五、待验证
+
+- AGENTS.md 最新跨工具规范细节（OpenAI Codex 仓库的 agents.md 约定、嵌套 AGENTS.md 合并规则、与 CLAUDE.md 的推荐引用写法），落地 #37 前需读一次官方仓库。
+- "Repo Bootstrap Kit" 打包下载在纯前端的实现（JSZip 需源码内嵌，约 100KB，评估是否符合单页体积约束；或改为逐个文件下载）。
+- 各表单后端（Formspree/Formgrid/Waitlister）2026 年免费额度与防垃圾邮件机制，#40 落地前核实。
+- Formspree 后台用户反馈连续五期未导出，强烈建议本周人工查看。
